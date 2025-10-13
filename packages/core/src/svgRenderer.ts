@@ -1,0 +1,251 @@
+/**
+ * SVGRenderer module
+ * Renders LayoutBlocks to SVG string
+ */
+
+import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName } from './types';
+
+/**
+ * Color palette mapping
+ */
+const COLORS: Record<ColorName, string> = {
+  blue: '#93c5fd',
+  cyan: '#67e8f9',
+  yellow: '#fde047',
+  green: '#86efac',
+  orange: '#fdba74',
+  purple: '#c4b5fd',
+  mint: '#6ee7b7',
+  pink: '#f9a8d4',
+  gray: '#d1d5db',
+};
+
+/**
+ * Default render options
+ */
+const DEFAULT_OPTIONS: Required<RenderOptions> = {
+  showHexDump: false,
+  showLegend: true,
+  showGrid: true,
+  cellWidth: 40, // Increased from 30 to make bit numbers readable
+  cellHeight: 30,
+  fontSize: 10,
+  uniformRowHeight: false, // Bitfield rows are taller by default
+};
+
+/**
+ * Render LayoutBlocks to SVG string
+ *
+ * @param config ByteGrid configuration
+ * @param blocks Layout blocks to render
+ * @param options Render options
+ * @returns SVG string
+ */
+export function renderSVG(
+  config: ByteGridConfig,
+  blocks: LayoutBlock[],
+  options?: RenderOptions
+): string {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const layout = config.layout || 16;
+
+  // Detect rows with bitfields
+  const rowsWithBitfields = new Set<number>();
+  for (const block of blocks) {
+    if (block.bitfields && block.bitfields.length > 0) {
+      rowsWithBitfields.add(block.row);
+    }
+  }
+
+  // Determine cell height based on uniformRowHeight option
+  const hasBitfields = rowsWithBitfields.size > 0;
+  const bitfieldCellHeight = 45;
+  const normalCellHeight = opts.cellHeight;
+
+  // Calculate dimensions
+  const rows = Math.ceil(config.size / layout);
+  const gridWidth = layout * opts.cellWidth;
+  const legendWidth = opts.showLegend ? 200 : 0;
+  const margin = 20;
+
+  // Count unique fields for legend height calculation
+  const uniqueFieldNames = new Set(blocks.map((b) => b.fieldName));
+  const fieldCount = uniqueFieldNames.size;
+  const legendHeight = opts.showLegend && fieldCount > 0 ? fieldCount * 50 + 40 : 0;
+
+  // Calculate grid height based on row heights
+  let gridHeight = 0;
+  if (opts.uniformRowHeight && hasBitfields) {
+    // All rows use bitfield height
+    gridHeight = rows * bitfieldCellHeight;
+  } else {
+    // Each row may have different height
+    for (let row = 0; row < rows; row++) {
+      if (rowsWithBitfields.has(row)) {
+        gridHeight += bitfieldCellHeight;
+      } else {
+        gridHeight += normalCellHeight;
+      }
+    }
+  }
+
+  // Use the larger of grid height or legend height
+  const contentHeight = Math.max(gridHeight, legendHeight);
+
+  const totalWidth = margin + gridWidth + margin + legendWidth + margin;
+  const totalHeight = margin + 60 + contentHeight + margin + 80;
+
+  const gridStartX = margin;
+  const gridStartY = margin + 60;
+
+  // Calculate cumulative Y position for each row
+  const rowYPositions = new Map<number, number>();
+  let cumulativeY = gridStartY;
+  for (let row = 0; row < rows; row++) {
+    rowYPositions.set(row, cumulativeY);
+    if (opts.uniformRowHeight && hasBitfields) {
+      cumulativeY += bitfieldCellHeight;
+    } else if (rowsWithBitfields.has(row)) {
+      cumulativeY += bitfieldCellHeight;
+    } else {
+      cumulativeY += normalCellHeight;
+    }
+  }
+
+  // Helper function to get cell height for a block
+  const getCellHeight = (block: LayoutBlock): number => {
+    if (opts.uniformRowHeight && hasBitfields) {
+      return bitfieldCellHeight;
+    }
+    return block.bitfields && block.bitfields.length > 0 ? bitfieldCellHeight : normalCellHeight;
+  };
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" style="font-family: monospace; background: white;">`;
+
+  // Title
+  svg += `<text x="${totalWidth / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold">${escapeXml(config.name)}</text>`;
+
+  // Column headers (byte offsets)
+  if (opts.showGrid) {
+    for (let col = 0; col < layout; col++) {
+      const x = gridStartX + col * opts.cellWidth + opts.cellWidth / 2;
+      const y = gridStartY - 10;
+      svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="#666">${col}</text>`;
+    }
+  }
+
+  // Render blocks
+  for (const block of blocks) {
+    const x = gridStartX + block.col * opts.cellWidth;
+    const y = rowYPositions.get(block.row) || gridStartY;
+    const width = block.span * opts.cellWidth;
+    const cellHeight = getCellHeight(block);
+    const color = COLORS[block.color] || COLORS.gray;
+
+    // Draw block rectangle
+    svg += `<rect x="${x}" y="${y}" width="${width}" height="${cellHeight}" fill="${color}" stroke="#333" stroke-width="1"/>`;
+
+    // Draw byte numbers
+    for (let i = 0; i < block.span; i++) {
+      const byteNum = block.offsetStart + i;
+      const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
+      const cellY = y + (cellHeight / 3); // Upper third for byte number
+      svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${byteNum}</text>`;
+    }
+
+    // Draw bit grid for bitfield cells
+    if (block.bitfields && block.bitfields.length > 0) {
+      for (let i = 0; i < block.span; i++) {
+        const cellX = x + i * opts.cellWidth;
+        const bitCellWidth = opts.cellWidth / 8;
+
+        // Draw vertical lines dividing 8 bits
+        for (let bit = 1; bit < 8; bit++) {
+          const lineX = cellX + bit * bitCellWidth;
+          svg += `<line x1="${lineX}" y1="${y}" x2="${lineX}" y2="${y + cellHeight}" stroke="#ccc" stroke-width="0.5"/>`;
+        }
+
+        // Draw bit numbers (0-7)
+        for (let bit = 0; bit < 8; bit++) {
+          const bitX = cellX + bit * bitCellWidth + bitCellWidth / 2;
+          const bitY = y + (cellHeight * 2 / 3) + 5; // Lower third for bit numbers
+          svg += `<text x="${bitX}" y="${bitY}" text-anchor="middle" font-size="7" fill="#666">${7 - bit}</text>`;
+        }
+      }
+    }
+  }
+
+  // Legend
+  if (opts.showLegend && blocks.length > 0) {
+    const legendX = margin + gridWidth + margin * 2;
+    const legendStartY = gridStartY;
+
+    svg += `<text x="${legendX}" y="${legendStartY - 20}" font-size="12" font-weight="bold" fill="#333">Fields</text>`;
+
+    // Group blocks by field name to avoid duplicates
+    const uniqueFields = new Map<string, LayoutBlock>();
+    for (const block of blocks) {
+      if (!uniqueFields.has(block.fieldName)) {
+        uniqueFields.set(block.fieldName, block);
+      }
+    }
+
+    let index = 0;
+    for (const [fieldName, block] of uniqueFields) {
+      let entryHeight = 50; // Default height per field
+
+      // Calculate height needed if bitfields exist
+      if (block.bitfields && block.bitfields.length > 0) {
+        entryHeight = 50 + block.bitfields.length * 12; // Extra 12px per bitfield
+      }
+
+      const y = legendStartY + index * entryHeight;
+      const color = COLORS[block.color] || COLORS.gray;
+
+      // Color box
+      svg += `<rect x="${legendX}" y="${y}" width="20" height="20" fill="${color}" stroke="#333" stroke-width="1"/>`;
+
+      // Field name
+      svg += `<text x="${legendX + 30}" y="${y + 12}" font-size="11" font-weight="bold" fill="#333">${escapeXml(fieldName)}</text>`;
+
+      // Type
+      svg += `<text x="${legendX + 30}" y="${y + 24}" font-size="9" fill="#666">${escapeXml(block.fieldType)}</text>`;
+
+      // Offset info
+      svg += `<text x="${legendX + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${block.offsetEnd - block.offsetStart + 1} bytes)</text>`;
+
+      // Bitfields (if any)
+      if (block.bitfields && block.bitfields.length > 0) {
+        svg += `<text x="${legendX + 30}" y="${y + 48}" font-size="9" font-weight="bold" fill="#666">Bits:</text>`;
+
+        block.bitfields.forEach((bf, bfIndex) => {
+          const bfY = y + 60 + bfIndex * 12;
+          svg += `<text x="${legendX + 35}" y="${bfY}" font-size="8" fill="#888">`;
+          svg += `bit ${escapeXml(bf.bits)}: ${escapeXml(bf.name)}`;
+          svg += `</text>`;
+        });
+      }
+
+      index++;
+    }
+  }
+
+  // Footer
+  const footerY = totalHeight - 40;
+  svg += `<text x="${totalWidth / 2}" y="${footerY}" text-anchor="middle" font-size="11" fill="#999">Total size: ${config.size} bytes | Layout: ${layout} bytes/row</text>`;
+
+  svg += `</svg>`;
+  return svg;
+}
+
+/**
+ * Escape XML special characters
+ */
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}

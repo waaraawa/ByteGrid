@@ -1,0 +1,75 @@
+name: WAV File Header
+size: 44
+layout: 16
+fields:
+  - offset: 0-3
+    name: ChunkID
+    type: char[4]
+    value: "RIFF"
+    description: "RIFF Header"
+    color: blue
+  - offset: 4-7
+    name: ChunkSize
+    type: uint32_t
+    description: "File size minus 8 bytes"
+    color: cyan
+  - offset: 8-11
+    name: Format
+    type: char[4]
+    value: "WAVE"
+    description: "WAVE Header"
+    color: blue
+  - offset: 12-15
+    name: Subchunk1ID
+    type: char[4]
+    value: "fmt "
+    description: "Format chunk marker"
+    color: orange
+  - offset: 16-19
+    name: Subchunk1Size
+    type: uint32_t
+    value: "16"
+    description: "Length of format data (16 for PCM)"
+    color: cyan
+  - offset: 20-21
+    name: AudioFormat
+    type: uint16_t
+    value: "1"
+    description: "Audio format (1=PCM)"
+    color: yellow
+  - offset: 22-23
+    name: NumChannels
+    type: uint16_t
+    description: "Number of channels"
+    color: green
+  - offset: 24-27
+    name: SampleRate
+    type: uint32_t
+    description: "Sample rate (e.g., 44100)"
+    color: purple
+  - offset: 28-31
+    name: ByteRate
+    type: uint32_t
+    description: "Bytes per second"
+    color: cyan
+  - offset: 32-33
+    name: BlockAlign
+    type: uint16_t
+    description: "Bytes per sample frame"
+    color: mint
+  - offset: 34-35
+    name: BitsPerSample
+    type: uint16_t
+    description: "Bits per sample (e.g., 16)"
+    color: yellow
+  - offset: 36-39
+    name: Subchunk2ID
+    type: char[4]
+    value: "data"
+    description: "Data chunk marker"
+    color: orange
+  - offset: 40-43
+    name: Subchunk2Size
+    type: uint32_t
+    description: "Size of audio data"
+    color: cyan

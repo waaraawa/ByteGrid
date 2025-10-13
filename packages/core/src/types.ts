@@ -120,4 +120,5 @@ export interface RenderOptions {
   cellWidth?: number;
   cellHeight?: number;
   fontSize?: number;
+  uniformRowHeight?: boolean; // If true, all rows have same height. If false (default), bitfield rows are taller
 }

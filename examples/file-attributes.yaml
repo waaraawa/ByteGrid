@@ -1,0 +1,43 @@
+name: File Attributes (FAT32)
+size: 4
+layout: 8
+fields:
+  - offset: 0
+    name: Attributes
+    type: uint8_t
+    description: "File attribute flags"
+    color: yellow
+    bitfields:
+      - name: READ_ONLY
+        bits: "0"
+        description: "Read-only file"
+      - name: HIDDEN
+        bits: "1"
+        description: "Hidden file"
+      - name: SYSTEM
+        bits: "2"
+        description: "System file"
+      - name: VOLUME_LABEL
+        bits: "3"
+        description: "Volume label"
+      - name: DIRECTORY
+        bits: "4"
+        description: "Directory (not a file)"
+      - name: ARCHIVE
+        bits: "5"
+        description: "Archive flag"
+      - name: DEVICE
+        bits: "6"
+        description: "Device (reserved)"
+      - name: RESERVED
+        bits: "7"
+        description: "Reserved"
+  - offset: 1
+    name: Reserved1
+    type: uint8_t
+    color: gray
+  - offset: 2-3
+    name: CreationTime
+    type: uint16_t
+    description: "File creation time"
+    color: purple

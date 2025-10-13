@@ -1,0 +1,37 @@
+name: Unix File Permissions
+size: 2
+layout: 8
+fields:
+  - offset: 0
+    name: Mode
+    type: uint16_t
+    description: "File mode and permissions"
+    color: yellow
+    bitfields:
+      - name: OWNER_READ
+        bits: "8"
+        description: "Owner can read (r--)"
+      - name: OWNER_WRITE
+        bits: "7"
+        description: "Owner can write (-w-)"
+      - name: OWNER_EXEC
+        bits: "6"
+        description: "Owner can execute (--x)"
+      - name: GROUP_READ
+        bits: "5"
+        description: "Group can read (r--)"
+      - name: GROUP_WRITE
+        bits: "4"
+        description: "Group can write (-w-)"
+      - name: GROUP_EXEC
+        bits: "3"
+        description: "Group can execute (--x)"
+      - name: OTHER_READ
+        bits: "2"
+        description: "Others can read (r--)"
+      - name: OTHER_WRITE
+        bits: "1"
+        description: "Others can write (-w-)"
+      - name: OTHER_EXEC
+        bits: "0"
+        description: "Others can execute (--x)"

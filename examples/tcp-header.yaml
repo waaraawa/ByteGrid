@@ -1,0 +1,74 @@
+name: TCP Header
+size: 20
+layout: 16
+fields:
+  - offset: 0-1
+    name: SourcePort
+    type: uint16_t
+    description: "Source port number"
+    color: blue
+  - offset: 2-3
+    name: DestPort
+    type: uint16_t
+    description: "Destination port number"
+    color: cyan
+  - offset: 4-7
+    name: SeqNumber
+    type: uint32_t
+    description: "Sequence number"
+    color: green
+  - offset: 8-11
+    name: AckNumber
+    type: uint32_t
+    description: "Acknowledgment number"
+    color: purple
+  - offset: 12
+    name: Flags
+    type: uint8_t
+    description: "TCP flags"
+    color: yellow
+    bitfields:
+      - name: CWR
+        bits: "7"
+        description: "Congestion Window Reduced"
+      - name: ECE
+        bits: "6"
+        description: "ECN-Echo"
+      - name: URG
+        bits: "5"
+        description: "Urgent"
+      - name: ACK
+        bits: "4"
+        description: "Acknowledgment"
+      - name: PSH
+        bits: "3"
+        description: "Push"
+      - name: RST
+        bits: "2"
+        description: "Reset"
+      - name: SYN
+        bits: "1"
+        description: "Synchronize"
+      - name: FIN
+        bits: "0"
+        description: "Finish"
+  - offset: 13
+    name: Reserved
+    type: uint8_t
+    description: "Reserved bits"
+    color: gray
+  - offset: 14-15
+    name: WindowSize
+    type: uint16_t
+    description: "Window size"
+    color: mint
+  - offset: 16-17
+    name: Checksum
+    type: uint16_t
+    description: "Checksum"
+    color: orange
+  - offset: 18-19
+    name: UrgentPointer
+    type: uint16_t
+    description: "Urgent pointer"
+    color: pink

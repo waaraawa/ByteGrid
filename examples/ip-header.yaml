@@ -1,0 +1,81 @@
+name: IPv4 Header
+size: 20
+layout: 16
+fields:
+  - offset: 0
+    name: Version+IHL
+    type: uint8_t
+    description: "Version (4 bits) + Header Length (4 bits)"
+    color: blue
+    bitfields:
+      - name: Version
+        bits: "4-7"
+        description: "IP version (4 for IPv4)"
+      - name: IHL
+        bits: "0-3"
+        description: "Header length in 32-bit words"
+  - offset: 1
+    name: DSCP+ECN
+    type: uint8_t
+    description: "Differentiated Services Code Point + ECN"
+    color: yellow
+    bitfields:
+      - name: DSCP
+        bits: "2-7"
+        description: "Differentiated Services"
+      - name: ECN
+        bits: "0-1"
+        description: "Explicit Congestion Notification"
+  - offset: 2-3
+    name: TotalLength
+    type: uint16_t
+    description: "Total packet length"
+    color: cyan
+  - offset: 4-5
+    name: Identification
+    type: uint16_t
+    description: "Packet identification"
+    color: green
+  - offset: 6-7
+    name: Flags+FragOffset
+    type: uint16_t
+    description: "Flags (3 bits) + Fragment Offset (13 bits)"
+    color: orange
+    bitfields:
+      - name: Reserved
+        bits: "15"
+        description: "Must be zero"
+      - name: DF
+        bits: "14"
+        description: "Don't Fragment"
+      - name: MF
+        bits: "13"
+        description: "More Fragments"
+      - name: FragmentOffset
+        bits: "0-12"
+        description: "Fragment offset"
+  - offset: 8
+    name: TTL
+    type: uint8_t
+    description: "Time To Live"
+    color: purple
+  - offset: 9
+    name: Protocol
+    type: uint8_t
+    description: "Protocol (6=TCP, 17=UDP)"
+    color: mint
+  - offset: 10-11
+    name: Checksum
+    type: uint16_t
+    description: "Header checksum"
+    color: pink
+  - offset: 12-15
+    name: SourceIP
+    type: uint32_t
+    description: "Source IP address"
+    color: blue
+  - offset: 16-19
+    name: DestIP
+    type: uint32_t
+    description: "Destination IP address"
+    color: cyan

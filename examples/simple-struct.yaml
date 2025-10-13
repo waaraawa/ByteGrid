@@ -1,0 +1,24 @@
+name: Simple Data Structure
+size: 16
+layout: 8
+fields:
+  - offset: 0-3
+    name: ID
+    type: uint32_t
+    description: "Unique identifier"
+    color: blue
+  - offset: 4-7
+    name: Timestamp
+    type: uint32_t
+    description: "Unix timestamp"
+    color: purple
+  - offset: 8-11
+    name: Value
+    type: float
+    description: "Floating point value"
+    color: green
+  - offset: 12-15
+    name: Checksum
+    type: uint32_t
+    description: "CRC32 checksum"
+    color: orange

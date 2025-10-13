@@ -1,0 +1,54 @@
+name: x86 CPU FLAGS Register
+size: 4
+layout: 8
+fields:
+  - offset: 0-1
+    name: FLAGS
+    type: uint16_t
+    description: "CPU status and control flags"
+    color: yellow
+    bitfields:
+      - name: CF
+        bits: "0"
+        description: "Carry Flag"
+      - name: Reserved1
+        bits: "1"
+        description: "Always 1"
+      - name: PF
+        bits: "2"
+        description: "Parity Flag"
+      - name: AF
+        bits: "4"
+        description: "Auxiliary Carry Flag"
+      - name: ZF
+        bits: "6"
+        description: "Zero Flag"
+      - name: SF
+        bits: "7"
+        description: "Sign Flag"
+      - name: TF
+        bits: "8"
+        description: "Trap Flag"
+      - name: IF
+        bits: "9"
+        description: "Interrupt Enable Flag"
+      - name: DF
+        bits: "10"
+        description: "Direction Flag"
+      - name: OF
+        bits: "11"
+        description: "Overflow Flag"
+      - name: IOPL
+        bits: "12-13"
+        description: "I/O Privilege Level"
+      - name: NT
+        bits: "14"
+        description: "Nested Task"
+      - name: RF
+        bits: "15"
+        description: "Resume Flag"
+  - offset: 2-3
+    name: ExtendedFlags
+    type: uint16_t
+    description: "Extended flags (EFLAGS upper 16 bits)"
+    color: purple
