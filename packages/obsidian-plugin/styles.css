@@ -1,0 +1,39 @@
+/* ByteGrid Plugin Styles */
+
+.bytegrid-container {
+  margin: 1em 0;
+  padding: 1em;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.theme-dark .bytegrid-container {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.bytegrid-info {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.bytegrid-source {
+  font-family: 'Monaco', 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.theme-dark .bytegrid-source {
+  background-color: #374151 !important;
+  color: #e5e7eb;
+}
+
+.bytegrid-footer {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.5em;
+}
+
+.theme-dark .bytegrid-footer {
+  border-top-color: #374151;
+}

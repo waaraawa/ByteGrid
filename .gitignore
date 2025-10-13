@@ -7,6 +7,10 @@ yarn.lock
 dist/
 *.tsbuildinfo
 
+# Obsidian plugin build
+packages/obsidian-plugin/main.js
+packages/obsidian-plugin/main.js.map
+
 # Test coverage
 coverage/
 
