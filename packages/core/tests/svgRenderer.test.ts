@@ -483,5 +483,138 @@ describe('SVGRenderer', () => {
         expect(svg).not.toContain('Total size:');
       });
     });
+
+    // legendColumns tests
+    describe('legendColumns option', () => {
+      const multiFieldConfig: ByteGridConfig = {
+        name: 'Multi Field Test',
+        size: 16,
+        layout: 16,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t', color: 'blue' },
+          { offset: '4-7', name: 'Field2', type: 'uint32_t', color: 'cyan' },
+          { offset: '8-11', name: 'Field3', type: 'uint32_t', color: 'yellow' },
+          { offset: '12-15', name: 'Field4', type: 'uint32_t', color: 'green' },
+        ],
+      };
+
+      const multiFieldBlocks: LayoutBlock[] = [
+        {
+          row: 0, col: 0, span: 4,
+          fieldName: 'Field1', fieldType: 'uint32_t', color: 'blue',
+          offsetStart: 0, offsetEnd: 3, isPadding: false,
+        },
+        {
+          row: 0, col: 4, span: 4,
+          fieldName: 'Field2', fieldType: 'uint32_t', color: 'cyan',
+          offsetStart: 4, offsetEnd: 7, isPadding: false,
+        },
+        {
+          row: 0, col: 8, span: 4,
+          fieldName: 'Field3', fieldType: 'uint32_t', color: 'yellow',
+          offsetStart: 8, offsetEnd: 11, isPadding: false,
+        },
+        {
+          row: 0, col: 12, span: 4,
+          fieldName: 'Field4', fieldType: 'uint32_t', color: 'green',
+          offsetStart: 12, offsetEnd: 15, isPadding: false,
+        },
+      ];
+
+      it('should render legend in 1 column by default', () => {
+        const svg = renderSVG(multiFieldConfig, multiFieldBlocks);
+
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+        expect(svg).toContain('Field3');
+        expect(svg).toContain('Field4');
+      });
+
+      it('should render legend in 2 columns when legendColumns is 2', () => {
+        const svg = renderSVG(multiFieldConfig, multiFieldBlocks, {
+          legendColumns: 2,
+        });
+
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+        expect(svg).toContain('Field3');
+        expect(svg).toContain('Field4');
+      });
+
+      it('should use config.legendColumns when options.legendColumns is not provided', () => {
+        const configWithColumns: ByteGridConfig = {
+          ...multiFieldConfig,
+          legendColumns: 2,
+        };
+
+        const svg = renderSVG(configWithColumns, multiFieldBlocks);
+
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+      });
+
+      it('should prioritize options.legendColumns over config.legendColumns', () => {
+        const configWithColumns: ByteGridConfig = {
+          ...multiFieldConfig,
+          legendColumns: 1,
+        };
+
+        const svg = renderSVG(configWithColumns, multiFieldBlocks, {
+          legendColumns: 2,
+        });
+
+        expect(svg).toContain('Field1');
+      });
+
+      it('should handle legendColumns with minimum value of 1', () => {
+        const svg = renderSVG(multiFieldConfig, multiFieldBlocks, {
+          legendColumns: 0, // Should be treated as 1
+        });
+
+        expect(svg).toContain('Field1');
+      });
+
+      it('should render legend in 3 columns when legendColumns is 3', () => {
+        // 6 fields for testing 3 columns
+        const sixFieldConfig: ByteGridConfig = {
+          name: 'Six Field Test',
+          size: 24,
+          layout: 16,
+          fields: [
+            { offset: '0-3', name: 'Field1', type: 'uint32_t', color: 'blue' },
+            { offset: '4-7', name: 'Field2', type: 'uint32_t', color: 'cyan' },
+            { offset: '8-11', name: 'Field3', type: 'uint32_t', color: 'yellow' },
+            { offset: '12-15', name: 'Field4', type: 'uint32_t', color: 'green' },
+            { offset: '16-19', name: 'Field5', type: 'uint32_t', color: 'orange' },
+            { offset: '20-23', name: 'Field6', type: 'uint32_t', color: 'purple' },
+          ],
+        };
+
+        const sixFieldBlocks: LayoutBlock[] = [
+          { row: 0, col: 0, span: 4, fieldName: 'Field1', fieldType: 'uint32_t', color: 'blue', offsetStart: 0, offsetEnd: 3, isPadding: false },
+          { row: 0, col: 4, span: 4, fieldName: 'Field2', fieldType: 'uint32_t', color: 'cyan', offsetStart: 4, offsetEnd: 7, isPadding: false },
+          { row: 0, col: 8, span: 4, fieldName: 'Field3', fieldType: 'uint32_t', color: 'yellow', offsetStart: 8, offsetEnd: 11, isPadding: false },
+          { row: 0, col: 12, span: 4, fieldName: 'Field4', fieldType: 'uint32_t', color: 'green', offsetStart: 12, offsetEnd: 15, isPadding: false },
+          { row: 1, col: 0, span: 4, fieldName: 'Field5', fieldType: 'uint32_t', color: 'orange', offsetStart: 16, offsetEnd: 19, isPadding: false },
+          { row: 1, col: 4, span: 4, fieldName: 'Field6', fieldType: 'uint32_t', color: 'purple', offsetStart: 20, offsetEnd: 23, isPadding: false },
+        ];
+
+        const svg = renderSVG(sixFieldConfig, sixFieldBlocks, {
+          legendColumns: 3,
+        });
+
+        // All 6 fields should be present
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+        expect(svg).toContain('Field3');
+        expect(svg).toContain('Field4');
+        expect(svg).toContain('Field5');
+        expect(svg).toContain('Field6');
+
+        // Check for proper width (should be wider for 3 columns)
+        // Each column is 200px, so 3 columns = 600px
+        expect(svg).toMatch(/width="\d+"/);
+      });
+    });
   });
 });

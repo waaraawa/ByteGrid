@@ -118,5 +118,3 @@ fields:
 **layoutUnit field:**
 - Can be omitted (auto-inferred from suffix)
 - Can be explicit (use `layoutUnit: bit` or `layoutUnit: byte` if desired)
-
-For more details, see [CLAUDE.md](../CLAUDE.md).

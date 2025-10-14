@@ -247,6 +247,11 @@ export function parse(source: string): ByteGridConfig {
     ? (obj.legendPosition as 'right' | 'left' | 'bottom' | 'none')
     : undefined;
 
+  // Parse legendColumns (optional)
+  const legendColumns = obj.legendColumns && typeof obj.legendColumns === 'number'
+    ? obj.legendColumns
+    : undefined;
+
   // Parse showFooter (optional)
   const showFooter = obj.showFooter !== undefined && typeof obj.showFooter === 'boolean'
     ? obj.showFooter
@@ -262,6 +267,7 @@ export function parse(source: string): ByteGridConfig {
     layoutUnit: finalLayoutUnit,
     colorScheme,
     legendPosition,
+    legendColumns,
     showFooter,
     fields,
   };

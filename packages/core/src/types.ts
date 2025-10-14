@@ -92,6 +92,7 @@ export interface ByteGridConfig {
   layoutUnit?: LayoutUnit; // 'byte' (default) or 'bit'
   colorScheme?: ColorScheme;
   legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'
+  legendColumns?: number; // Number of columns in legend (default: 1)
   showFooter?: boolean; // Show footer with total size and layout info (default: true)
   fields: Field[];
 }
@@ -131,6 +132,7 @@ export interface RenderOptions {
   showHexDump?: boolean;
   showLegend?: boolean; // Deprecated: use legendPosition instead
   legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'
+  legendColumns?: number; // Number of columns in legend (default: 1)
   showFooter?: boolean; // Show footer with total size and layout info (default: true)
   showGrid?: boolean;
   cellWidth?: number;

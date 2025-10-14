@@ -27,6 +27,7 @@ const DEFAULT_OPTIONS: Required<RenderOptions> = {
   showHexDump: false,
   showLegend: true,
   legendPosition: 'right',
+  legendColumns: 1,
   showFooter: true,
   showGrid: true,
   cellWidth: 40, // Increased from 30 to make bit numbers readable
@@ -78,6 +79,14 @@ export function renderSVG(
     ? config.showFooter
     : opts.showFooter;
 
+  // Determine legendColumns
+  // Priority: options.legendColumns > config.legendColumns > default (1)
+  const effectiveLegendColumns = options?.legendColumns !== undefined
+    ? Math.max(1, Math.floor(options.legendColumns))
+    : config.legendColumns !== undefined
+    ? Math.max(1, Math.floor(config.legendColumns))
+    : opts.legendColumns;
+
   // Detect rows with bitfields
   const rowsWithBitfields = new Set<number>();
   for (const block of blocks) {
@@ -94,7 +103,10 @@ export function renderSVG(
   // Calculate dimensions
   const rows = Math.ceil(config.size / layout);
   const gridWidth = layout * opts.cellWidth;
-  const legendWidth = effectiveLegendPosition !== 'none' && effectiveLegendPosition !== 'bottom' ? 200 : 0;
+  const legendColumnWidth = 200; // Width of each legend column
+  const legendWidth = effectiveLegendPosition !== 'none' && effectiveLegendPosition !== 'bottom'
+    ? legendColumnWidth * effectiveLegendColumns
+    : 0;
   const margin = 20;
 
   // Count unique fields for legend height calculation
@@ -104,7 +116,7 @@ export function renderSVG(
   // Calculate legend height (for 'bottom' position or side positions)
   let legendHeight = 0;
   if (effectiveLegendPosition !== 'none' && fieldCount > 0) {
-    // Calculate actual height needed based on bitfields
+    // Calculate actual height needed based on bitfields (row-major order)
     let totalLegendHeight = 40; // Header space
     const uniqueFields = new Map<string, LayoutBlock>();
     for (const block of blocks) {
@@ -112,13 +124,25 @@ export function renderSVG(
         uniqueFields.set(block.fieldName, block);
       }
     }
+
+    // For multi-column row-major, we need to find the tallest entry in each row
+    const rowHeights: number[] = [];
+    let fieldIndex = 0;
     for (const [, block] of uniqueFields) {
+      const rowIndex = Math.floor(fieldIndex / effectiveLegendColumns);
       let entryHeight = 50;
       if (block.bitfields && block.bitfields.length > 0) {
         entryHeight = 50 + block.bitfields.length * 12;
       }
-      totalLegendHeight += entryHeight;
+      rowHeights[rowIndex] = Math.max(rowHeights[rowIndex] || 0, entryHeight);
+      fieldIndex++;
     }
+
+    // Sum up all row heights
+    for (const h of rowHeights) {
+      totalLegendHeight += h;
+    }
+
     legendHeight = totalLegendHeight;
   }
 
@@ -153,7 +177,9 @@ export function renderSVG(
     gridStartY = margin + 60;
   } else if (effectiveLegendPosition === 'bottom') {
     // Legend at bottom (with extra 30px spacing for title)
-    totalWidth = margin + gridWidth + margin;
+    // Need to account for multi-column legend width
+    const bottomLegendWidth = legendColumnWidth * effectiveLegendColumns;
+    totalWidth = margin + Math.max(gridWidth, bottomLegendWidth) + margin;
     totalHeight = margin + 60 + gridHeight + margin + 30 + legendHeight + footerHeight;
     gridStartX = margin;
     gridStartY = margin + 60;
@@ -306,45 +332,75 @@ export function renderSVG(
       }
     }
 
-    let index = 0;
-    for (const [fieldName, block] of uniqueFields) {
-      let entryHeight = 50; // Default height per field
+    // Calculate number of rows (row-major order: fill columns left-to-right)
+    const totalFields = uniqueFields.size;
+    const totalRows = Math.ceil(totalFields / effectiveLegendColumns);
 
-      // Calculate height needed if bitfields exist
-      if (block.bitfields && block.bitfields.length > 0) {
-        entryHeight = 50 + block.bitfields.length * 12; // Extra 12px per bitfield
+    // Calculate cumulative Y positions for each row (to handle variable heights)
+    const rowYPositions: number[] = [legendStartY];
+    const fieldsArray = Array.from(uniqueFields.entries());
+
+    for (let row = 0; row < totalRows; row++) {
+      let maxHeightInRow = 50; // Default height
+
+      // Check all fields in this row across all columns (row-major)
+      for (let col = 0; col < effectiveLegendColumns; col++) {
+        const fieldIndex = row * effectiveLegendColumns + col;
+        if (fieldIndex < totalFields) {
+          const [, block] = fieldsArray[fieldIndex];
+          let entryHeight = 50;
+          if (block.bitfields && block.bitfields.length > 0) {
+            entryHeight = 50 + block.bitfields.length * 12;
+          }
+          maxHeightInRow = Math.max(maxHeightInRow, entryHeight);
+        }
       }
 
-      const y = legendStartY + index * entryHeight;
+      if (row < totalRows - 1) {
+        rowYPositions.push(rowYPositions[row] + maxHeightInRow);
+      }
+    }
+
+    // Render fields in row-major order (left-to-right, then top-to-bottom)
+    let fieldIndex = 0;
+    for (const [fieldName, block] of uniqueFields) {
+      // Calculate row and column for this field (row-major)
+      const row = Math.floor(fieldIndex / effectiveLegendColumns);
+      const col = fieldIndex % effectiveLegendColumns;
+
+      // Calculate position
+      const x = legendX + col * legendColumnWidth;
+      const y = rowYPositions[row];
+
       const color = COLORS[block.color] || COLORS.gray;
 
       // Color box
-      svg += `<rect x="${legendX}" y="${y}" width="20" height="20" fill="${color}" stroke="#333" stroke-width="1"/>`;
+      svg += `<rect x="${x}" y="${y}" width="20" height="20" fill="${color}" stroke="#333" stroke-width="1"/>`;
 
       // Field name
-      svg += `<text x="${legendX + 30}" y="${y + 12}" font-size="11" font-weight="bold" fill="#333">${escapeXml(fieldName)}</text>`;
+      svg += `<text x="${x + 30}" y="${y + 12}" font-size="11" font-weight="bold" fill="#333">${escapeXml(fieldName)}</text>`;
 
       // Type
-      svg += `<text x="${legendX + 30}" y="${y + 24}" font-size="9" fill="#666">${escapeXml(block.fieldType)}</text>`;
+      svg += `<text x="${x + 30}" y="${y + 24}" font-size="9" fill="#666">${escapeXml(block.fieldType)}</text>`;
 
       // Offset info
       const unit = layoutUnit === 'bit' ? 'bits' : 'bytes';
       const size = block.offsetEnd - block.offsetStart + 1;
-      svg += `<text x="${legendX + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${size} ${unit})</text>`;
+      svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${size} ${unit})</text>`;
 
       // Bitfields (if any)
       if (block.bitfields && block.bitfields.length > 0) {
-        svg += `<text x="${legendX + 30}" y="${y + 48}" font-size="9" font-weight="bold" fill="#666">Bits:</text>`;
+        svg += `<text x="${x + 30}" y="${y + 48}" font-size="9" font-weight="bold" fill="#666">Bits:</text>`;
 
         block.bitfields.forEach((bf, bfIndex) => {
           const bfY = y + 60 + bfIndex * 12;
-          svg += `<text x="${legendX + 35}" y="${bfY}" font-size="8" fill="#888">`;
+          svg += `<text x="${x + 35}" y="${bfY}" font-size="8" fill="#888">`;
           svg += `bit ${escapeXml(bf.bits)}: ${escapeXml(bf.name)}`;
           svg += `</text>`;
         });
       }
 
-      index++;
+      fieldIndex++;
     }
   }
 

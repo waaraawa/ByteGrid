@@ -624,5 +624,55 @@ fields:
         expect(result.showFooter).toBeUndefined();
       });
     });
+
+    // legendColumns tests
+    describe('legendColumns', () => {
+      it('should parse legendColumns: 1', () => {
+        const yaml = `
+name: Test
+size: 16
+legendColumns: 1
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendColumns).toBe(1);
+      });
+
+      it('should parse legendColumns: 2', () => {
+        const yaml = `
+name: Test
+size: 16
+legendColumns: 2
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendColumns).toBe(2);
+      });
+
+      it('should return undefined when legendColumns is not specified', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendColumns).toBeUndefined();
+      });
+    });
   });
 });
