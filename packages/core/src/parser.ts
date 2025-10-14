@@ -37,7 +37,7 @@ export function parse(source: string): ByteGridConfig {
     throw new ParseError('Missing or invalid required field: name');
   }
 
-  if (!obj.size || typeof obj.size !== 'number') {
+  if (!obj.size) {
     throw new ParseError('Missing or invalid required field: size');
   }
 
@@ -49,8 +49,98 @@ export function parse(source: string): ByteGridConfig {
     throw new ParseError('Fields array must contain at least one field');
   }
 
-  // Parse layout (optional, defaults to 16)
-  const layout = obj.layout !== undefined ? Number(obj.layout) : 16;
+  // Parse layoutUnit (optional)
+  let layoutUnit: 'byte' | 'bit' | undefined = obj.layoutUnit && typeof obj.layoutUnit === 'string'
+    ? (obj.layoutUnit as 'byte' | 'bit')
+    : undefined;
+
+  // Parse layout (optional, defaults to 16) and infer layoutUnit if not specified
+  let layout: number;
+  if (obj.layout === undefined) {
+    layout = 16;
+  } else if (typeof obj.layout === 'number') {
+    layout = obj.layout;
+  } else if (typeof obj.layout === 'string') {
+    const layoutStr = obj.layout.trim();
+    let layoutValue: number;
+    let layoutUnitSuffix: 'byte' | 'bit' | undefined;
+
+    // Extract suffix
+    if (layoutStr.endsWith('b')) {
+      layoutValue = parseInt(layoutStr.slice(0, -1).trim());
+      layoutUnitSuffix = 'bit';
+      // Auto-infer layoutUnit from suffix if not explicitly set
+      if (!layoutUnit) layoutUnit = 'bit';
+    } else if (layoutStr.endsWith('B')) {
+      layoutValue = parseInt(layoutStr.slice(0, -1).trim());
+      layoutUnitSuffix = 'byte';
+    } else {
+      layoutValue = parseInt(layoutStr);
+      layoutUnitSuffix = undefined;
+    }
+
+    if (isNaN(layoutValue) || layoutValue <= 0) {
+      throw new ParseError('Invalid layout value');
+    }
+
+    // Default layoutUnit to byte if still not set
+    const effectiveLayoutUnit = layoutUnit || 'byte';
+    const effectiveSuffix = layoutUnitSuffix || effectiveLayoutUnit;
+
+    // Convert to the layoutUnit
+    if (effectiveLayoutUnit === 'bit') {
+      // In bit layout mode, layout must be in bits
+      layout = effectiveSuffix === 'byte' ? layoutValue * 8 : layoutValue;
+    } else {
+      // In byte layout mode, layout must be in bytes
+      layout = effectiveSuffix === 'bit' ? Math.ceil(layoutValue / 8) : layoutValue;
+    }
+  } else {
+    layout = 16;
+  }
+
+  // Parse size (supports suffix: b = bit, B = Byte, no suffix = depends on layoutUnit) and infer layoutUnit if not specified
+  let size: number;
+  if (typeof obj.size === 'number') {
+    size = obj.size;
+  } else if (typeof obj.size === 'string') {
+    const sizeStr = obj.size.trim();
+    let sizeValue: number;
+    let sizeUnitSuffix: 'byte' | 'bit' | undefined;
+
+    // Extract suffix
+    if (sizeStr.endsWith('b')) {
+      sizeValue = parseInt(sizeStr.slice(0, -1).trim());
+      sizeUnitSuffix = 'bit';
+      // Auto-infer layoutUnit from suffix if not explicitly set
+      if (!layoutUnit) layoutUnit = 'bit';
+    } else if (sizeStr.endsWith('B')) {
+      sizeValue = parseInt(sizeStr.slice(0, -1).trim());
+      sizeUnitSuffix = 'byte';
+    } else {
+      sizeValue = parseInt(sizeStr);
+      sizeUnitSuffix = undefined;
+    }
+
+    if (isNaN(sizeValue) || sizeValue <= 0) {
+      throw new ParseError('Invalid size value');
+    }
+
+    // Default layoutUnit to byte if still not set
+    const effectiveLayoutUnit = layoutUnit || 'byte';
+    const effectiveSizeUnit = sizeUnitSuffix || effectiveLayoutUnit;
+
+    // Convert to the layoutUnit
+    if (effectiveLayoutUnit === 'bit') {
+      // In bit layout mode, size must be in bits
+      size = effectiveSizeUnit === 'byte' ? sizeValue * 8 : sizeValue;
+    } else {
+      // In byte layout mode, size must be in bytes
+      size = effectiveSizeUnit === 'bit' ? Math.ceil(sizeValue / 8) : sizeValue;
+    }
+  } else {
+    throw new ParseError('Size must be a number or string');
+  }
 
   // Parse fields
   const fields: Field[] = obj.fields.map((fieldObj, index) => {
@@ -152,11 +242,27 @@ export function parse(source: string): ByteGridConfig {
     ? (obj.colorScheme as 'default' | 'dark' | 'light')
     : undefined;
 
+  // Parse legendPosition (optional)
+  const legendPosition = obj.legendPosition && typeof obj.legendPosition === 'string'
+    ? (obj.legendPosition as 'right' | 'left' | 'bottom' | 'none')
+    : undefined;
+
+  // Parse showFooter (optional)
+  const showFooter = obj.showFooter !== undefined && typeof obj.showFooter === 'boolean'
+    ? obj.showFooter
+    : undefined;
+
+  // Set final layoutUnit (default to byte if not inferred)
+  const finalLayoutUnit = layoutUnit || 'byte';
+
   return {
     name: obj.name,
-    size: obj.size,
+    size,
     layout,
+    layoutUnit: finalLayoutUnit,
     colorScheme,
+    legendPosition,
+    showFooter,
     fields,
   };
 }

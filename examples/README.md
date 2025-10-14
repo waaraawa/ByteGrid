@@ -1,92 +1,122 @@
 # ByteGrid Examples
 
-이 폴더에는 ByteGrid 플러그인에서 사용할 수 있는 예시 파일들이 있습니다.
+This folder contains example files for the ByteGrid plugin.
 
-## 사용 방법
+## How to Use
 
-1. 원하는 예시 파일을 엽니다
-2. 내용을 **모두 선택**하여 복사합니다
-3. Obsidian 노트에서 코드블록을 만듭니다:
+1. Open the example file you want to use
+2. **Select all** content and copy it
+3. Create a code block in your Obsidian note:
    ```
    ```bytegrid
-   [여기에 붙여넣기]
+   [paste here]
    ```
    ```
 
-## 예시 파일 목록
+## Example Files
 
-### 기본 예시
+### Basic Examples
 
 #### 1. simple-struct.yaml
-- 간단한 16바이트 구조체
-- 4개 필드 (ID, Timestamp, Value, Checksum)
-- 8바이트/행 레이아웃
+- Simple 16-byte structure
+- 4 fields (ID, Timestamp, Value, Checksum)
+- 8 bytes/row layout
 
 #### 2. wav-header.yaml
-- WAV 오디오 파일 헤더 (44바이트)
-- 14개 필드 (RIFF, WAVE, fmt, data 청크)
-- 16바이트/행 레이아웃
-- 오디오 형식, 샘플레이트 등 포함
+- WAV audio file header (44 bytes)
+- 14 fields (RIFF, WAVE, fmt, data chunks)
+- 16 bytes/row layout
+- Includes audio format, sample rate, etc.
 
-### 네트워크 프로토콜
+### Network Protocols
 
 #### 3. tcp-header.yaml
-- TCP 프로토콜 헤더 (20바이트)
-- 10개 필드 (포트, 시퀀스 번호, 플래그 등)
-- **비트필드 예시**: 8개 TCP 플래그 (CWR, ECE, URG, ACK, PSH, RST, SYN, FIN)
-- 16바이트/행 레이아웃
+- TCP protocol header (20 bytes)
+- 10 fields (ports, sequence number, flags, etc.)
+- **Bitfield example**: 8 TCP flags (CWR, ECE, URG, ACK, PSH, RST, SYN, FIN)
+- 16 bytes/row layout
 
 #### 4. ip-header.yaml
-- IPv4 헤더 (20바이트)
-- 10개 필드 (Version, DSCP, TTL, Protocol, IP 주소 등)
-- **비트필드 예시**: Version+IHL, DSCP+ECN, Flags+FragmentOffset
-- IP 단편화 플래그 포함 (DF, MF)
+- IPv4 header (20 bytes)
+- 10 fields (Version, DSCP, TTL, Protocol, IP addresses, etc.)
+- **Bitfield example**: Version+IHL, DSCP+ECN, Flags+FragmentOffset
+- Includes IP fragmentation flags (DF, MF)
 
-### 파일 시스템 & 권한
+### File System & Permissions
 
 #### 5. file-attributes.yaml
-- FAT32 파일 속성 (4바이트)
-- **비트필드 예시**: 8개 파일 속성 플래그
-- READ_ONLY, HIDDEN, SYSTEM, DIRECTORY, ARCHIVE 등
+- FAT32 file attributes (4 bytes)
+- **Bitfield example**: 8 file attribute flags
+- READ_ONLY, HIDDEN, SYSTEM, DIRECTORY, ARCHIVE, etc.
 
 #### 6. unix-permissions.yaml
-- Unix 파일 권한 (2바이트)
-- **비트필드 예시**: rwxrwxrwx (9비트)
-- Owner/Group/Others 권한 (읽기/쓰기/실행)
+- Unix file permissions (2 bytes)
+- **Bitfield example**: rwxrwxrwx (9 bits)
+- Owner/Group/Others permissions (read/write/execute)
 
-### 하드웨어 & CPU
+### Hardware & CPU
 
 #### 7. cpu-flags.yaml
-- x86 CPU FLAGS 레지스터 (4바이트)
-- **비트필드 예시**: 16개 CPU 플래그
-- CF, ZF, SF, IF, DF, OF, IOPL 등
+- x86 CPU FLAGS register (4 bytes)
+- **Bitfield example**: 16 CPU flags
+- CF, ZF, SF, IF, DF, OF, IOPL, etc.
 
-## 주의사항
+## Important Notes
 
-⚠️ **복사 시 들여쓰기 주의**
+⚠️ **Watch Out for Indentation When Copying**
 
-Obsidian 코드블록에 붙여넣을 때 자동으로 들여쓰기가 추가될 수 있습니다.
+Obsidian may automatically add indentation when pasting into code blocks.
 
-**문제 발생 시:**
-1. Obsidian **소스 모드**로 전환 (Ctrl/Cmd + E)
-2. ` ```bytegrid` 다음 줄 확인
-3. `name:` 앞에 공백이 **없어야** 정상
-4. 공백이 있다면 제거
+**If you encounter issues:**
+1. Switch to Obsidian **Source Mode** (Ctrl/Cmd + E)
+2. Check the line after ` ```bytegrid`
+3. There should be **no spaces** before `name:`
+4. Remove any extra spaces if present
 
-## 직접 만들기
+## Create Your Own
 
-새로운 구조체를 시각화하려면:
+To visualize a new structure:
 
 ```yaml
-name: 구조체 이름
-size: 전체 바이트 크기
-layout: 16  # 한 행당 바이트 수 (선택, 기본값: 16)
+name: Structure Name
+size: total byte size
+layout: 16  # bytes per row (optional, default: 16)
+legendPosition: right  # right, left, bottom, none (optional, default: right)
+showFooter: true  # show/hide footer (optional, default: true)
 fields:
   - offset: 0-3
-    name: 필드명
+    name: FieldName
     type: uint32_t
     color: blue  # blue, cyan, yellow, green, orange, purple, mint, pink, gray
-    description: "설명"  # 선택사항
+    description: "Description"  # optional
 ```
 
-더 자세한 내용은 [CLAUDE.md](../CLAUDE.md)를 참조하세요.
+## Bit-Level Layout Examples
+
+### 8. simple-bit-layout.yaml
+- Basic bit-level layout test (16 bits)
+- **Suffix notation**: `size: 16b`, `layout: 16b`, `offset: 0-7b`
+- `layoutUnit` can be omitted (auto-inferred from suffix)
+
+### 9. nibble-test.yaml
+- 4-bit field (nibble) test
+- Each nibble represented independently
+
+### 10. mixed-bit-byte.yaml
+- Mixed bit and byte offsets
+- `0-3b` (bit), `1B` (Byte), `2-3` (byte, default)
+
+### 11. ipv4-bit-layout.yaml
+- IPv4 header in bit-level representation
+- Sub-byte fields like Version(4bit) + IHL(4bit)
+
+**Suffix Notation:**
+- `b` (lowercase) = bit: `32b`, `0-7b`
+- `B` (uppercase) = Byte: `4B`, `0-3B`
+- no suffix = byte (default)
+
+**layoutUnit field:**
+- Can be omitted (auto-inferred from suffix)
+- Can be explicit (use `layoutUnit: bit` or `layoutUnit: byte` if desired)
+
+For more details, see [CLAUDE.md](../CLAUDE.md).

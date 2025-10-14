@@ -1,0 +1,24 @@
+name: Mixed Bit and Byte Offsets
+size: 32b
+layout: 32b
+fields:
+  - offset: 0-3b
+    name: Version
+    type: bits
+    description: "4 bits with b suffix"
+    color: blue
+  - offset: 4-7b
+    name: IHL
+    type: bits
+    description: "4 bits with b suffix"
+    color: cyan
+  - offset: 1B
+    name: SecondByte
+    type: uint8_t
+    description: "Byte 1 with B suffix (= bits 8-15)"
+    color: yellow
+  - offset: 2-3
+    name: ThirdFourthByte
+    type: uint16_t
+    description: "Bytes 2-3 no suffix (= bits 16-31)"
+    color: green

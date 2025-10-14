@@ -3,7 +3,7 @@
  * Renders LayoutBlocks to SVG string
  */
 
-import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName } from './types';
+import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName, LegendPosition } from './types';
 
 /**
  * Color palette mapping
@@ -26,6 +26,8 @@ const COLORS: Record<ColorName, string> = {
 const DEFAULT_OPTIONS: Required<RenderOptions> = {
   showHexDump: false,
   showLegend: true,
+  legendPosition: 'right',
+  showFooter: true,
   showGrid: true,
   cellWidth: 40, // Increased from 30 to make bit numbers readable
   cellHeight: 30,
@@ -47,7 +49,34 @@ export function renderSVG(
   options?: RenderOptions
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
+  const layoutUnit = config.layoutUnit || 'byte';
   const layout = config.layout || 16;
+
+  // Adjust cellWidth for bit layout
+  if (layoutUnit === 'bit' && !options?.cellWidth) {
+    opts.cellWidth = 10; // Smaller cells for bit-level layout
+  }
+
+  // Determine legend position
+  // Priority: options.legendPosition > config.legendPosition > options.showLegend (backward compat) > default
+  let effectiveLegendPosition: LegendPosition;
+  if (options?.legendPosition !== undefined) {
+    effectiveLegendPosition = options.legendPosition;
+  } else if (config.legendPosition !== undefined) {
+    effectiveLegendPosition = config.legendPosition;
+  } else if (options?.showLegend === false) {
+    effectiveLegendPosition = 'none';
+  } else {
+    effectiveLegendPosition = 'right'; // default
+  }
+
+  // Determine showFooter
+  // Priority: options.showFooter > config.showFooter > default (true)
+  const effectiveShowFooter = options?.showFooter !== undefined
+    ? options.showFooter
+    : config.showFooter !== undefined
+    ? config.showFooter
+    : opts.showFooter;
 
   // Detect rows with bitfields
   const rowsWithBitfields = new Set<number>();
@@ -65,13 +94,33 @@ export function renderSVG(
   // Calculate dimensions
   const rows = Math.ceil(config.size / layout);
   const gridWidth = layout * opts.cellWidth;
-  const legendWidth = opts.showLegend ? 200 : 0;
+  const legendWidth = effectiveLegendPosition !== 'none' && effectiveLegendPosition !== 'bottom' ? 200 : 0;
   const margin = 20;
 
   // Count unique fields for legend height calculation
   const uniqueFieldNames = new Set(blocks.map((b) => b.fieldName));
   const fieldCount = uniqueFieldNames.size;
-  const legendHeight = opts.showLegend && fieldCount > 0 ? fieldCount * 50 + 40 : 0;
+
+  // Calculate legend height (for 'bottom' position or side positions)
+  let legendHeight = 0;
+  if (effectiveLegendPosition !== 'none' && fieldCount > 0) {
+    // Calculate actual height needed based on bitfields
+    let totalLegendHeight = 40; // Header space
+    const uniqueFields = new Map<string, LayoutBlock>();
+    for (const block of blocks) {
+      if (!uniqueFields.has(block.fieldName)) {
+        uniqueFields.set(block.fieldName, block);
+      }
+    }
+    for (const [, block] of uniqueFields) {
+      let entryHeight = 50;
+      if (block.bitfields && block.bitfields.length > 0) {
+        entryHeight = 50 + block.bitfields.length * 12;
+      }
+      totalLegendHeight += entryHeight;
+    }
+    legendHeight = totalLegendHeight;
+  }
 
   // Calculate grid height based on row heights
   let gridHeight = 0;
@@ -89,14 +138,33 @@ export function renderSVG(
     }
   }
 
-  // Use the larger of grid height or legend height
-  const contentHeight = Math.max(gridHeight, legendHeight);
+  // Calculate total width and height based on legend position
+  const footerHeight = effectiveShowFooter ? 60 : 20; // Footer space or just bottom margin
+  let totalWidth: number;
+  let totalHeight: number;
+  let gridStartX: number;
+  let gridStartY: number;
 
-  const totalWidth = margin + gridWidth + margin + legendWidth + margin;
-  const totalHeight = margin + 60 + contentHeight + margin + 80;
-
-  const gridStartX = margin;
-  const gridStartY = margin + 60;
+  if (effectiveLegendPosition === 'left') {
+    // Legend on left, grid on right
+    totalWidth = margin + legendWidth + margin + gridWidth + margin;
+    totalHeight = margin + 60 + Math.max(gridHeight, legendHeight) + margin + footerHeight;
+    gridStartX = margin + legendWidth + margin;
+    gridStartY = margin + 60;
+  } else if (effectiveLegendPosition === 'bottom') {
+    // Legend at bottom (with extra 30px spacing for title)
+    totalWidth = margin + gridWidth + margin;
+    totalHeight = margin + 60 + gridHeight + margin + 30 + legendHeight + footerHeight;
+    gridStartX = margin;
+    gridStartY = margin + 60;
+  } else {
+    // Legend on right (default) or none
+    const contentHeight = Math.max(gridHeight, legendHeight);
+    totalWidth = margin + gridWidth + margin + legendWidth + margin;
+    totalHeight = margin + 60 + contentHeight + margin + footerHeight;
+    gridStartX = margin;
+    gridStartY = margin + 60;
+  }
 
   // Calculate cumulative Y position for each row
   const rowYPositions = new Map<number, number>();
@@ -125,12 +193,27 @@ export function renderSVG(
   // Title
   svg += `<text x="${totalWidth / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold">${escapeXml(config.name)}</text>`;
 
-  // Column headers (byte offsets)
+  // Column headers
   if (opts.showGrid) {
     for (let col = 0; col < layout; col++) {
       const x = gridStartX + col * opts.cellWidth + opts.cellWidth / 2;
       const y = gridStartY - 10;
-      svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="#666">${col}</text>`;
+      // For bit layout, show index 0-7 pattern, for byte layout show absolute position
+      const headerLabel = layoutUnit === 'bit' ? col % 8 : col;
+      svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="#666">${headerLabel}</text>`;
+    }
+  }
+
+  // Row headers (left side) for bit layout
+  if (opts.showGrid && layoutUnit === 'bit') {
+    for (let row = 0; row < rows; row++) {
+      const y = rowYPositions.get(row) || gridStartY;
+      const cellHeight = rowsWithBitfields.has(row)
+        ? (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : bitfieldCellHeight)
+        : (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : normalCellHeight);
+      const startOffset = row * layout;
+      const textY = y + cellHeight / 2 + 4;
+      svg += `<text x="${gridStartX - 5}" y="${textY}" text-anchor="end" font-size="9" fill="#666">${startOffset}</text>`;
     }
   }
 
@@ -145,16 +228,18 @@ export function renderSVG(
     // Draw block rectangle
     svg += `<rect x="${x}" y="${y}" width="${width}" height="${cellHeight}" fill="${color}" stroke="#333" stroke-width="1"/>`;
 
-    // Draw byte numbers
-    for (let i = 0; i < block.span; i++) {
-      const byteNum = block.offsetStart + i;
-      const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
-      const cellY = y + (cellHeight / 3); // Upper third for byte number
-      svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${byteNum}</text>`;
+    // Draw numbers inside cells (only for byte layout)
+    if (layoutUnit !== 'bit') {
+      for (let i = 0; i < block.span; i++) {
+        const byteNum = block.offsetStart + i;
+        const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
+        const cellY = y + (cellHeight / 3); // Upper third for byte number
+        svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${byteNum}</text>`;
+      }
     }
 
-    // Draw bit grid for bitfield cells
-    if (block.bitfields && block.bitfields.length > 0) {
+    // Draw bit grid for bitfield cells (only in byte layout mode)
+    if (block.bitfields && block.bitfields.length > 0 && layoutUnit !== 'bit') {
       for (let i = 0; i < block.span; i++) {
         const cellX = x + i * opts.cellWidth;
         const bitCellWidth = opts.cellWidth / 8;
@@ -175,12 +260,43 @@ export function renderSVG(
     }
   }
 
-  // Legend
-  if (opts.showLegend && blocks.length > 0) {
-    const legendX = margin + gridWidth + margin * 2;
-    const legendStartY = gridStartY;
+  // Draw bit boundary lines for bit layout
+  if (layoutUnit === 'bit') {
+    for (let col = 1; col < layout; col++) {
+      const lineX = gridStartX + col * opts.cellWidth;
+      // Every 8 bits: darker dotted line (byte boundary)
+      // Other bits: lighter dotted line (bit boundary)
+      if (col % 8 === 0) {
+        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>`;
+      } else {
+        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+      }
+    }
+  }
 
-    svg += `<text x="${legendX}" y="${legendStartY - 20}" font-size="12" font-weight="bold" fill="#333">Fields</text>`;
+  // Legend
+  if (effectiveLegendPosition !== 'none' && blocks.length > 0) {
+    let legendX: number;
+    let legendStartY: number;
+    let legendTitleY: number;
+
+    // Position legend based on effectiveLegendPosition
+    if (effectiveLegendPosition === 'left') {
+      legendX = margin;
+      legendStartY = gridStartY;
+      legendTitleY = legendStartY - 20;
+    } else if (effectiveLegendPosition === 'bottom') {
+      legendX = margin;
+      legendStartY = gridStartY + gridHeight + margin + 30; // Extra space for title
+      legendTitleY = gridStartY + gridHeight + margin + 10;
+    } else {
+      // 'right' (default)
+      legendX = margin + gridWidth + margin * 2;
+      legendStartY = gridStartY;
+      legendTitleY = legendStartY - 20;
+    }
+
+    svg += `<text x="${legendX}" y="${legendTitleY}" font-size="12" font-weight="bold" fill="#333">Fields</text>`;
 
     // Group blocks by field name to avoid duplicates
     const uniqueFields = new Map<string, LayoutBlock>();
@@ -212,7 +328,9 @@ export function renderSVG(
       svg += `<text x="${legendX + 30}" y="${y + 24}" font-size="9" fill="#666">${escapeXml(block.fieldType)}</text>`;
 
       // Offset info
-      svg += `<text x="${legendX + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${block.offsetEnd - block.offsetStart + 1} bytes)</text>`;
+      const unit = layoutUnit === 'bit' ? 'bits' : 'bytes';
+      const size = block.offsetEnd - block.offsetStart + 1;
+      svg += `<text x="${legendX + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${size} ${unit})</text>`;
 
       // Bitfields (if any)
       if (block.bitfields && block.bitfields.length > 0) {
@@ -231,8 +349,12 @@ export function renderSVG(
   }
 
   // Footer
-  const footerY = totalHeight - 40;
-  svg += `<text x="${totalWidth / 2}" y="${footerY}" text-anchor="middle" font-size="11" fill="#999">Total size: ${config.size} bytes | Layout: ${layout} bytes/row</text>`;
+  if (effectiveShowFooter) {
+    const footerY = totalHeight - 40;
+    const sizeUnit = layoutUnit === 'bit' ? 'bits' : 'bytes';
+    const layoutUnitText = layoutUnit === 'bit' ? 'bits/row' : 'bytes/row';
+    svg += `<text x="${totalWidth / 2}" y="${footerY}" text-anchor="middle" font-size="11" fill="#999">Total size: ${config.size} ${sizeUnit} | Layout: ${layout} ${layoutUnitText}</text>`;
+  }
 
   svg += `</svg>`;
   return svg;

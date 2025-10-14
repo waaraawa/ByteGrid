@@ -1,0 +1,14 @@
+name: 4-bit Fields (Nibbles)
+size: 8b
+layout: 8b
+fields:
+  - offset: 0-3b
+    name: Nibble1
+    type: bits
+    description: "First 4 bits"
+    color: blue
+  - offset: 4-7b
+    name: Nibble2
+    type: bits
+    description: "Second 4 bits"
+    color: cyan

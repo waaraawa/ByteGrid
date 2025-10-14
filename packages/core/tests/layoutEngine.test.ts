@@ -247,4 +247,141 @@ describe('LayoutEngine', () => {
       expect(blocks[3].col).toBe(12);
     });
   });
+
+  describe('createLayout() - bit-unit layout', () => {
+    it('should create layout blocks for bit-unit fields', () => {
+      const config: ByteGridConfig = {
+        name: 'Bit Layout',
+        size: 16, // 16 bits
+        layoutUnit: 'bit',
+        layout: 16, // 16 bits per row
+        fields: [
+          { offset: '0-7b', name: 'FirstByte', type: 'uint8_t', color: 'blue' },
+          { offset: '8-15b', name: 'SecondByte', type: 'uint8_t', color: 'cyan' },
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(2);
+
+      // FirstByte: bits 0-7
+      expect(blocks[0].row).toBe(0);
+      expect(blocks[0].col).toBe(0);
+      expect(blocks[0].span).toBe(8);
+      expect(blocks[0].fieldName).toBe('FirstByte');
+      expect(blocks[0].offsetStart).toBe(0);
+      expect(blocks[0].offsetEnd).toBe(7);
+
+      // SecondByte: bits 8-15
+      expect(blocks[1].row).toBe(0);
+      expect(blocks[1].col).toBe(8);
+      expect(blocks[1].span).toBe(8);
+      expect(blocks[1].fieldName).toBe('SecondByte');
+    });
+
+    it('should handle Byte offset in bit layout', () => {
+      const config: ByteGridConfig = {
+        name: 'Mixed',
+        size: 16, // 16 bits
+        layoutUnit: 'bit',
+        layout: 16,
+        fields: [
+          { offset: '0B', name: 'ByteField', type: 'uint8_t', color: 'blue' },
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(1);
+      // 0B = byte 0 = bits 0-7
+      expect(blocks[0].row).toBe(0);
+      expect(blocks[0].col).toBe(0);
+      expect(blocks[0].span).toBe(8);
+      expect(blocks[0].offsetStart).toBe(0);
+      expect(blocks[0].offsetEnd).toBe(7);
+    });
+
+    it('should split bit fields across multiple rows', () => {
+      const config: ByteGridConfig = {
+        name: 'Multi-row Bits',
+        size: 32, // 32 bits
+        layoutUnit: 'bit',
+        layout: 16, // 16 bits per row
+        fields: [
+          { offset: '0-23b', name: 'LargeBitField', type: 'bits', color: 'green' },
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      // Should split into 2 blocks (16 bits each)
+      expect(blocks).toHaveLength(2);
+
+      // First row: bits 0-15
+      expect(blocks[0].row).toBe(0);
+      expect(blocks[0].col).toBe(0);
+      expect(blocks[0].span).toBe(16);
+      expect(blocks[0].offsetStart).toBe(0);
+      expect(blocks[0].offsetEnd).toBe(15);
+
+      // Second row: bits 16-23
+      expect(blocks[1].row).toBe(1);
+      expect(blocks[1].col).toBe(0);
+      expect(blocks[1].span).toBe(8);
+      expect(blocks[1].offsetStart).toBe(16);
+      expect(blocks[1].offsetEnd).toBe(23);
+    });
+
+    it('should handle mixed bit and Byte offsets', () => {
+      const config: ByteGridConfig = {
+        name: 'IPv4 Header',
+        size: 32, // 32 bits
+        layoutUnit: 'bit',
+        layout: 32,
+        fields: [
+          { offset: '0-3b', name: 'Version', type: 'bits', color: 'blue' },
+          { offset: '4-7b', name: 'IHL', type: 'bits', color: 'cyan' },
+          { offset: '1B', name: 'DSCP', type: 'uint8_t', color: 'yellow' },
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(3);
+
+      // Version: bits 0-3
+      expect(blocks[0].col).toBe(0);
+      expect(blocks[0].span).toBe(4);
+
+      // IHL: bits 4-7
+      expect(blocks[1].col).toBe(4);
+      expect(blocks[1].span).toBe(4);
+
+      // DSCP: byte 1 = bits 8-15
+      expect(blocks[2].col).toBe(8);
+      expect(blocks[2].span).toBe(8);
+      expect(blocks[2].offsetStart).toBe(8);
+      expect(blocks[2].offsetEnd).toBe(15);
+    });
+
+    it('should handle 4-bit fields', () => {
+      const config: ByteGridConfig = {
+        name: '4-bit Fields',
+        size: 8, // 8 bits = 1 byte
+        layoutUnit: 'bit',
+        layout: 8,
+        fields: [
+          { offset: '0-3b', name: 'Nibble1', type: 'bits' },
+          { offset: '4-7b', name: 'Nibble2', type: 'bits' },
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(2);
+      expect(blocks[0].span).toBe(4);
+      expect(blocks[1].span).toBe(4);
+    });
+  });
 });

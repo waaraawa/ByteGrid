@@ -230,5 +230,399 @@ fields:
       expect(() => parse(yaml)).toThrow(ParseError);
       expect(() => parse(yaml)).toThrow(/field.*type/i);
     });
+
+    // Bit-unit layout tests
+    describe('Bit-unit layout', () => {
+      it('should parse layoutUnit: bit', () => {
+        const yaml = `
+name: Bit Layout Test
+size: 2
+layoutUnit: bit
+layout: 16
+fields:
+  - offset: 0-7b
+    name: BitField
+    type: uint8_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layoutUnit).toBe('bit');
+        expect(result.layout).toBe(16);
+      });
+
+      it('should default layoutUnit to byte', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layoutUnit).toBe('byte');
+      });
+
+      it('should parse bit offset with b suffix: 0-7b', () => {
+        const yaml = `
+name: Test
+size: 2
+layoutUnit: bit
+fields:
+  - offset: 0-7b
+    name: BitField
+    type: uint8_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.fields[0].offset).toBe('0-7b');
+      });
+
+      it('should parse Byte offset with B suffix: 0B', () => {
+        const yaml = `
+name: Test
+size: 2
+layoutUnit: bit
+fields:
+  - offset: 0B
+    name: ByteField
+    type: uint8_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.fields[0].offset).toBe('0B');
+      });
+
+      it('should parse offset without suffix as Byte', () => {
+        const yaml = `
+name: Test
+size: 2
+layoutUnit: bit
+fields:
+  - offset: 0-1
+    name: TwoBytes
+    type: uint16_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.fields[0].offset).toBe('0-1');
+      });
+
+      it('should parse mixed bit and Byte offsets', () => {
+        const yaml = `
+name: IPv4 Header
+size: 4
+layoutUnit: bit
+layout: 32
+fields:
+  - offset: 0-3b
+    name: Version
+    type: bits
+  - offset: 4-7b
+    name: IHL
+    type: bits
+  - offset: 1B
+    name: DSCP
+    type: uint8_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.fields).toHaveLength(3);
+        expect(result.fields[0].offset).toBe('0-3b');
+        expect(result.fields[1].offset).toBe('4-7b');
+        expect(result.fields[2].offset).toBe('1B');
+      });
+
+      it('should parse size with B suffix (Byte)', () => {
+        const yaml = `
+name: Test
+size: 4B
+layoutUnit: bit
+fields:
+  - offset: 0-31b
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.size).toBe(32); // 4 bytes = 32 bits (in bit layout mode)
+      });
+
+      it('should parse size with b suffix (bit)', () => {
+        const yaml = `
+name: Test
+size: 32b
+layoutUnit: bit
+fields:
+  - offset: 0-31b
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.size).toBe(32); // 32 bits
+      });
+
+      it('should parse size without suffix (uses layoutUnit)', () => {
+        const yaml = `
+name: Test
+size: 4
+layoutUnit: byte
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.size).toBe(4); // 4 bytes (layoutUnit=byte)
+      });
+
+      it('should parse layout with B suffix (Byte)', () => {
+        const yaml = `
+name: Test
+size: 16b
+layoutUnit: bit
+layout: 2B
+fields:
+  - offset: 0-15b
+    name: Field1
+    type: uint16_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layout).toBe(16); // 2 Bytes = 16 bits (in bit layout mode)
+      });
+
+      it('should parse layout with b suffix (bit)', () => {
+        const yaml = `
+name: Test
+size: 32b
+layoutUnit: bit
+layout: 24b
+fields:
+  - offset: 0-31b
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layout).toBe(24); // 24 bits
+      });
+
+      it('should parse layout without suffix (uses layoutUnit)', () => {
+        const yaml = `
+name: Test
+size: 32
+layoutUnit: byte
+layout: 8
+fields:
+  - offset: 0-31
+    name: Field1
+    type: uint8_t[32]
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layout).toBe(8); // 8 bytes (layoutUnit=byte)
+      });
+
+      it('should auto-infer layoutUnit=bit from b suffix', () => {
+        const yaml = `
+name: Test
+size: 32b
+layout: 16b
+fields:
+  - offset: 0-7b
+    name: Field1
+    type: uint8_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layoutUnit).toBe('bit'); // Auto-inferred from b suffix
+        expect(result.size).toBe(32);
+        expect(result.layout).toBe(16);
+      });
+
+      it('should default to byte when no layoutUnit and no b suffix', () => {
+        const yaml = `
+name: Test
+size: 4B
+layout: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layoutUnit).toBe('byte'); // Default
+        expect(result.size).toBe(4);
+        expect(result.layout).toBe(16);
+      });
+
+      it('should prefer explicit layoutUnit over suffix inference', () => {
+        const yaml = `
+name: Test
+size: 4B
+layoutUnit: byte
+layout: 16
+fields:
+  - offset: 0-31b
+    name: Field1
+    type: bits
+`;
+
+        const result = parse(yaml);
+
+        expect(result.layoutUnit).toBe('byte'); // Explicit wins
+      });
+    });
+
+    // Legend position tests
+    describe('Legend position', () => {
+      it('should parse legendPosition: right', () => {
+        const yaml = `
+name: Test
+size: 16
+legendPosition: right
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendPosition).toBe('right');
+      });
+
+      it('should parse legendPosition: left', () => {
+        const yaml = `
+name: Test
+size: 16
+legendPosition: left
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendPosition).toBe('left');
+      });
+
+      it('should parse legendPosition: bottom', () => {
+        const yaml = `
+name: Test
+size: 16
+legendPosition: bottom
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendPosition).toBe('bottom');
+      });
+
+      it('should parse legendPosition: none', () => {
+        const yaml = `
+name: Test
+size: 16
+legendPosition: none
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendPosition).toBe('none');
+      });
+
+      it('should return undefined when legendPosition is not specified', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.legendPosition).toBeUndefined();
+      });
+    });
+
+    // showFooter tests
+    describe('showFooter', () => {
+      it('should parse showFooter: true', () => {
+        const yaml = `
+name: Test
+size: 16
+showFooter: true
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.showFooter).toBe(true);
+      });
+
+      it('should parse showFooter: false', () => {
+        const yaml = `
+name: Test
+size: 16
+showFooter: false
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.showFooter).toBe(false);
+      });
+
+      it('should return undefined when showFooter is not specified', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.showFooter).toBeUndefined();
+      });
+    });
   });
 });

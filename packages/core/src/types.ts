@@ -73,13 +73,26 @@ export interface Field {
 }
 
 /**
+ * Layout unit type
+ */
+export type LayoutUnit = 'byte' | 'bit';
+
+/**
+ * Legend position options
+ */
+export type LegendPosition = 'right' | 'left' | 'bottom' | 'none';
+
+/**
  * Main configuration for ByteGrid visualization
  */
 export interface ByteGridConfig {
   name: string;
-  size: number; // Total size in bytes
-  layout?: number; // Bytes per row (default: 16)
+  size: number; // Total size in bytes (for bit layouts, this is total bits)
+  layout?: number; // Units per row (default: 16), unit depends on layoutUnit
+  layoutUnit?: LayoutUnit; // 'byte' (default) or 'bit'
   colorScheme?: ColorScheme;
+  legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'
+  showFooter?: boolean; // Show footer with total size and layout info (default: true)
   fields: Field[];
 }
 
@@ -90,6 +103,7 @@ export interface OffsetRange {
   start: number;
   end: number;
   size: number;
+  unit: LayoutUnit; // 'byte' or 'bit'
 }
 
 /**
@@ -115,7 +129,9 @@ export interface LayoutBlock {
  */
 export interface RenderOptions {
   showHexDump?: boolean;
-  showLegend?: boolean;
+  showLegend?: boolean; // Deprecated: use legendPosition instead
+  legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'
+  showFooter?: boolean; // Show footer with total size and layout info (default: true)
   showGrid?: boolean;
   cellWidth?: number;
   cellHeight?: number;

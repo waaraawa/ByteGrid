@@ -246,4 +246,137 @@ describe('Validator', () => {
       expect(() => validate(config)).toThrow(/bit.*out of range/i);
     });
   });
+
+  describe('parseOffset() - bit/byte suffix', () => {
+    it('should parse bit offset with b suffix: 0-7b', () => {
+      const result = parseOffset('0-7b');
+
+      expect(result.start).toBe(0);
+      expect(result.end).toBe(7);
+      expect(result.size).toBe(8);
+      expect(result.unit).toBe('bit');
+    });
+
+    it('should parse single bit with b suffix: 5b', () => {
+      const result = parseOffset('5b');
+
+      expect(result.start).toBe(5);
+      expect(result.end).toBe(5);
+      expect(result.size).toBe(1);
+      expect(result.unit).toBe('bit');
+    });
+
+    it('should parse Byte offset with B suffix: 0B', () => {
+      const result = parseOffset('0B');
+
+      expect(result.start).toBe(0);
+      expect(result.end).toBe(0);
+      expect(result.size).toBe(1);
+      expect(result.unit).toBe('byte');
+    });
+
+    it('should parse Byte range with B suffix: 1-3B', () => {
+      const result = parseOffset('1-3B');
+
+      expect(result.start).toBe(1);
+      expect(result.end).toBe(3);
+      expect(result.size).toBe(3);
+      expect(result.unit).toBe('byte');
+    });
+
+    it('should default to byte unit when no suffix: 0-3', () => {
+      const result = parseOffset('0-3');
+
+      expect(result.start).toBe(0);
+      expect(result.end).toBe(3);
+      expect(result.size).toBe(4);
+      expect(result.unit).toBe('byte');
+    });
+
+    it('should parse with whitespace: 0 - 7b', () => {
+      const result = parseOffset('0 - 7b');
+
+      expect(result.start).toBe(0);
+      expect(result.end).toBe(7);
+      expect(result.size).toBe(8);
+      expect(result.unit).toBe('bit');
+    });
+  });
+
+  describe('validate() - bit-unit layout', () => {
+    it('should validate bit-unit layout with bit offsets', () => {
+      const config: ByteGridConfig = {
+        name: 'Bit Layout',
+        size: 16, // 16 bits = 2 bytes
+        layoutUnit: 'bit',
+        layout: 16,
+        fields: [
+          { offset: '0-7b', name: 'FirstByte', type: 'uint8_t' },
+          { offset: '8-15b', name: 'SecondByte', type: 'uint8_t' },
+        ],
+      };
+
+      expect(() => validate(config)).not.toThrow();
+    });
+
+    it('should validate mixed bit and Byte offsets', () => {
+      const config: ByteGridConfig = {
+        name: 'Mixed Layout',
+        size: 32, // 32 bits = 4 bytes
+        layoutUnit: 'bit',
+        layout: 32,
+        fields: [
+          { offset: '0-3b', name: 'Version', type: 'bits' },
+          { offset: '4-7b', name: 'IHL', type: 'bits' },
+          { offset: '1B', name: 'DSCP', type: 'uint8_t' },
+        ],
+      };
+
+      expect(() => validate(config)).not.toThrow();
+    });
+
+    it('should detect overlap in bit-unit layout', () => {
+      const config: ByteGridConfig = {
+        name: 'Overlap Test',
+        size: 16, // 16 bits = 2 bytes
+        layoutUnit: 'bit',
+        fields: [
+          { offset: '0-7b', name: 'Field1', type: 'uint8_t' },
+          { offset: '4-11b', name: 'Field2', type: 'uint8_t' }, // overlaps bits 4-7
+        ],
+      };
+
+      expect(() => validate(config)).toThrow(ValidationError);
+      expect(() => validate(config)).toThrow(/overlap/i);
+    });
+
+    it('should detect overlap between bit and Byte offsets', () => {
+      const config: ByteGridConfig = {
+        name: 'Mixed Overlap',
+        size: 16, // 16 bits = 2 bytes
+        layoutUnit: 'bit',
+        fields: [
+          { offset: '0-3b', name: 'Version', type: 'bits' },
+          { offset: '0B', name: 'FullByte', type: 'uint8_t' }, // overlaps bits 0-3
+        ],
+      };
+
+      expect(() => validate(config)).toThrow(ValidationError);
+      expect(() => validate(config)).toThrow(/overlap/i);
+    });
+
+    it('should throw ValidationError if bit offset exceeds size', () => {
+      const config: ByteGridConfig = {
+        name: 'Size Test',
+        size: 16, // 16 bits
+        layoutUnit: 'bit',
+        fields: [
+          { offset: '0-19b', name: 'TooBig', type: 'bits' }, // exceeds 16 bits
+        ],
+      };
+
+      expect(() => validate(config)).toThrow(ValidationError);
+      expect(() => validate(config)).toThrow(/exceeds total size/i);
+    });
+  });
 });

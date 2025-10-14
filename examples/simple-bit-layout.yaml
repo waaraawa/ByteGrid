@@ -1,0 +1,14 @@
+name: Simple Bit Layout Test
+size: 16b
+layout: 16b
+fields:
+  - offset: 0-7b
+    name: FirstByte
+    type: uint8_t
+    description: "8 bits using b suffix"
+    color: blue
+  - offset: 8-15b
+    name: SecondByte
+    type: uint8_t
+    description: "Another 8 bits"
+    color: cyan

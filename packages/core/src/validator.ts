@@ -26,6 +26,7 @@ const SUPPORTED_TYPES: Set<string> = new Set([
   'double',
   'reserved',
   'padding',
+  'bits', // For bit-level fields
 ]);
 
 /**
@@ -47,10 +48,14 @@ const TYPE_BITS: Record<string, number> = {
 
 /**
  * Parse offset string to OffsetRange
- * Supports formats: "0-3" (range) or "4" (single byte)
+ * Supports formats:
+ *   "0-3" (byte range), "4" (single byte)
+ *   "0-7b" (bit range), "5b" (single bit)
+ *   "0-3B" (byte range), "0B" (single byte)
+ *   No suffix defaults to byte
  *
  * @param offset Offset string
- * @returns Parsed offset range
+ * @returns Parsed offset range with unit
  * @throws ValidationError if format is invalid
  */
 export function parseOffset(offset: string): OffsetRange {
@@ -60,9 +65,21 @@ export function parseOffset(offset: string): OffsetRange {
     throw new ValidationError('Offset cannot be empty');
   }
 
+  // Extract suffix (b = bit, B = Byte, none = byte default)
+  let unit: 'byte' | 'bit' = 'byte';
+  let offsetWithoutSuffix = trimmed;
+
+  if (trimmed.endsWith('b')) {
+    unit = 'bit';
+    offsetWithoutSuffix = trimmed.slice(0, -1).trim();
+  } else if (trimmed.endsWith('B')) {
+    unit = 'byte';
+    offsetWithoutSuffix = trimmed.slice(0, -1).trim();
+  }
+
   // Check for range format "0-3"
-  if (trimmed.includes('-')) {
-    const parts = trimmed.split('-');
+  if (offsetWithoutSuffix.includes('-')) {
+    const parts = offsetWithoutSuffix.split('-');
 
     if (parts.length !== 2) {
       throw new ValidationError(`Invalid offset format: "${offset}"`);
@@ -89,11 +106,12 @@ export function parseOffset(offset: string): OffsetRange {
       start,
       end,
       size: end - start + 1,
+      unit,
     };
   }
 
-  // Single byte format "4"
-  const value = parseInt(trimmed);
+  // Single value format "4"
+  const value = parseInt(offsetWithoutSuffix);
 
   if (isNaN(value)) {
     throw new ValidationError(`Invalid offset format: "${offset}"`);
@@ -107,6 +125,7 @@ export function parseOffset(offset: string): OffsetRange {
     start: value,
     end: value,
     size: 1,
+    unit,
   };
 }
 
@@ -168,9 +187,24 @@ function parseBitfieldBits(bits: string): { start: number; end: number } {
  * @throws ValidationError if validation fails
  */
 export function validate(config: ByteGridConfig): void {
+  const layoutUnit = config.layoutUnit || 'byte';
+
+  // Convert offset to bits for unified comparison
+  const toBits = (offset: OffsetRange): { start: number; end: number } => {
+    if (offset.unit === 'bit') {
+      return { start: offset.start, end: offset.end };
+    }
+    // Convert bytes to bits
+    return { start: offset.start * 8, end: offset.end * 8 + 7 };
+  };
+
+  // Total size in bits
+  const totalSizeInBits = layoutUnit === 'bit' ? config.size : config.size * 8;
+
   const parsedFields: Array<{
     index: number;
     offset: OffsetRange;
+    offsetInBits: { start: number; end: number };
     name: string;
     type: DataType;
   }> = [];
@@ -190,10 +224,12 @@ export function validate(config: ByteGridConfig): void {
       );
     }
 
-    // Validate field doesn't exceed total size
-    if (offset.end >= config.size) {
+    const offsetInBits = toBits(offset);
+
+    // Validate field doesn't exceed total size (in bits)
+    if (offsetInBits.end >= totalSizeInBits) {
       throw new ValidationError(
-        `Field "${field.name}" at index ${i} (offset ${offset.start}-${offset.end}) exceeds total size ${config.size}`,
+        `Field "${field.name}" at index ${i} (offset ${field.offset}) exceeds total size ${config.size} ${layoutUnit}${config.size !== 1 ? 's' : ''}`,
         i
       );
     }
@@ -246,26 +282,29 @@ export function validate(config: ByteGridConfig): void {
     parsedFields.push({
       index: i,
       offset,
+      offsetInBits,
       name: field.name,
       type: field.type,
     });
   }
 
-  // Check for overlapping fields
+  // Check for overlapping fields (in bit space)
   for (let i = 0; i < parsedFields.length; i++) {
     for (let j = i + 1; j < parsedFields.length; j++) {
       const field1 = parsedFields[i];
       const field2 = parsedFields[j];
 
-      // Check if ranges overlap
+      // Check if ranges overlap (in bits)
       const overlap =
-        (field1.offset.start <= field2.offset.end && field1.offset.end >= field2.offset.start) ||
-        (field2.offset.start <= field1.offset.end && field2.offset.end >= field1.offset.start);
+        (field1.offsetInBits.start <= field2.offsetInBits.end && field1.offsetInBits.end >= field2.offsetInBits.start) ||
+        (field2.offsetInBits.start <= field1.offsetInBits.end && field2.offsetInBits.end >= field1.offsetInBits.start);
 
       if (overlap) {
+        const field1Desc = `${config.fields[field1.index].offset}`;
+        const field2Desc = `${config.fields[field2.index].offset}`;
         throw new ValidationError(
-          `Field "${field2.name}" at index ${field2.index} (offset ${field2.offset.start}-${field2.offset.end}) ` +
-            `overlaps with field "${field1.name}" (offset ${field1.offset.start}-${field1.offset.end})`,
+          `Field "${field2.name}" at index ${field2.index} (offset ${field2Desc}) ` +
+            `overlaps with field "${field1.name}" (offset ${field1Desc})`,
           field2.index
         );
       }

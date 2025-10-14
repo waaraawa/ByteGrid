@@ -1,0 +1,24 @@
+name: IPv4 Header (Bit Layout)
+size: 4B
+layout: 32b
+fields:
+  - offset: 0-3b
+    name: Version
+    type: bits
+    description: "IP version (4 for IPv4)"
+    color: blue
+  - offset: 4-7b
+    name: IHL
+    type: bits
+    description: "Header length in 32-bit words"
+    color: cyan
+  - offset: 1B
+    name: DSCP+ECN
+    type: uint8_t
+    description: "Byte 1 using B suffix"
+    color: yellow
+  - offset: 16-31b
+    name: TotalLength
+    type: uint16_t
+    description: "Total packet length (2 bytes = 16 bits)"
+    color: green

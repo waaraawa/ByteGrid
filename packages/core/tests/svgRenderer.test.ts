@@ -284,5 +284,204 @@ describe('SVGRenderer', () => {
         expect(svg).toContain('height="30"');
       });
     });
+
+    // Legend position tests
+    describe('Legend position', () => {
+      const legendConfig: ByteGridConfig = {
+        name: 'Legend Position Test',
+        size: 16,
+        layout: 16,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t', color: 'blue' },
+          { offset: '4-7', name: 'Field2', type: 'uint32_t', color: 'cyan' },
+        ],
+      };
+
+      const legendBlocks: LayoutBlock[] = [
+        {
+          row: 0,
+          col: 0,
+          span: 4,
+          fieldName: 'Field1',
+          fieldType: 'uint32_t',
+          color: 'blue',
+          offsetStart: 0,
+          offsetEnd: 3,
+          isPadding: false,
+        },
+        {
+          row: 0,
+          col: 4,
+          span: 4,
+          fieldName: 'Field2',
+          fieldType: 'uint32_t',
+          color: 'cyan',
+          offsetStart: 4,
+          offsetEnd: 7,
+          isPadding: false,
+        },
+      ];
+
+      it('should render legend on right by default', () => {
+        const svg = renderSVG(legendConfig, legendBlocks);
+
+        // Should contain legend title
+        expect(svg).toContain('Fields');
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+      });
+
+      it('should render legend on right when legendPosition is "right"', () => {
+        const svg = renderSVG(legendConfig, legendBlocks, {
+          legendPosition: 'right',
+        });
+
+        expect(svg).toContain('Fields');
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+      });
+
+      it('should render legend on left when legendPosition is "left"', () => {
+        const svg = renderSVG(legendConfig, legendBlocks, {
+          legendPosition: 'left',
+        });
+
+        expect(svg).toContain('Fields');
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+      });
+
+      it('should render legend at bottom when legendPosition is "bottom"', () => {
+        const svg = renderSVG(legendConfig, legendBlocks, {
+          legendPosition: 'bottom',
+        });
+
+        expect(svg).toContain('Fields');
+        expect(svg).toContain('Field1');
+        expect(svg).toContain('Field2');
+      });
+
+      it('should not render legend when legendPosition is "none"', () => {
+        const svg = renderSVG(legendConfig, legendBlocks, {
+          legendPosition: 'none',
+        });
+
+        // Should NOT contain legend
+        expect(svg).not.toContain('Fields');
+      });
+
+      it('should not render legend when showLegend is false (backward compatibility)', () => {
+        const svg = renderSVG(legendConfig, legendBlocks, {
+          showLegend: false,
+        });
+
+        // Should NOT contain legend
+        expect(svg).not.toContain('Fields');
+      });
+
+      it('should prioritize legendPosition over showLegend', () => {
+        // legendPosition: 'none' should override showLegend: true
+        const svg1 = renderSVG(legendConfig, legendBlocks, {
+          showLegend: true,
+          legendPosition: 'none',
+        });
+
+        expect(svg1).not.toContain('Fields');
+
+        // legendPosition: 'right' should override showLegend: false
+        const svg2 = renderSVG(legendConfig, legendBlocks, {
+          showLegend: false,
+          legendPosition: 'right',
+        });
+
+        expect(svg2).toContain('Fields');
+      });
+
+      it('should use config.legendPosition when options.legendPosition is not provided', () => {
+        const configWithLegend: ByteGridConfig = {
+          ...legendConfig,
+          legendPosition: 'left',
+        };
+
+        const svg = renderSVG(configWithLegend, legendBlocks);
+
+        expect(svg).toContain('Fields');
+      });
+
+      it('should prioritize options.legendPosition over config.legendPosition', () => {
+        const configWithLegend: ByteGridConfig = {
+          ...legendConfig,
+          legendPosition: 'left',
+        };
+
+        const svg = renderSVG(configWithLegend, legendBlocks, {
+          legendPosition: 'none',
+        });
+
+        expect(svg).not.toContain('Fields');
+      });
+
+      it('should respect config.legendPosition: none', () => {
+        const configWithLegend: ByteGridConfig = {
+          ...legendConfig,
+          legendPosition: 'none',
+        };
+
+        const svg = renderSVG(configWithLegend, legendBlocks);
+
+        expect(svg).not.toContain('Fields');
+      });
+    });
+
+    // showFooter tests
+    describe('showFooter option', () => {
+      it('should render footer by default', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks);
+
+        expect(svg).toContain('Total size:');
+        expect(svg).toContain('Layout:');
+      });
+
+      it('should render footer when showFooter is true in options', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          showFooter: true,
+        });
+
+        expect(svg).toContain('Total size:');
+      });
+
+      it('should not render footer when showFooter is false in options', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          showFooter: false,
+        });
+
+        expect(svg).not.toContain('Total size:');
+        expect(svg).not.toContain('Layout:');
+      });
+
+      it('should use config.showFooter when options.showFooter is not provided', () => {
+        const configWithFooter: ByteGridConfig = {
+          ...sampleConfig,
+          showFooter: false,
+        };
+
+        const svg = renderSVG(configWithFooter, sampleBlocks);
+
+        expect(svg).not.toContain('Total size:');
+      });
+
+      it('should prioritize options.showFooter over config.showFooter', () => {
+        const configWithFooter: ByteGridConfig = {
+          ...sampleConfig,
+          showFooter: true,
+        };
+
+        const svg = renderSVG(configWithFooter, sampleBlocks, {
+          showFooter: false,
+        });
+
+        expect(svg).not.toContain('Total size:');
+      });
+    });
   });
 });
