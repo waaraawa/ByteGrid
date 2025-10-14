@@ -674,5 +674,71 @@ fields:
         expect(result.legendColumns).toBeUndefined();
       });
     });
+
+    // colorScheme tests
+    describe('colorScheme', () => {
+      it('should parse colorScheme: default', () => {
+        const yaml = `
+name: Test
+size: 16
+colorScheme: default
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.colorScheme).toBe('default');
+      });
+
+      it('should parse colorScheme: dark', () => {
+        const yaml = `
+name: Test
+size: 16
+colorScheme: dark
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.colorScheme).toBe('dark');
+      });
+
+      it('should parse colorScheme: light', () => {
+        const yaml = `
+name: Test
+size: 16
+colorScheme: light
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.colorScheme).toBe('light');
+      });
+
+      it('should return undefined when colorScheme is not specified', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.colorScheme).toBeUndefined();
+      });
+    });
   });
 });

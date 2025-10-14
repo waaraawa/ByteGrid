@@ -129,6 +129,7 @@ export interface LayoutBlock {
  * Rendering options
  */
 export interface RenderOptions {
+  colorScheme?: ColorScheme; // 'default', 'dark', or 'light'
   showHexDump?: boolean;
   showLegend?: boolean; // Deprecated: use legendPosition instead
   legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'

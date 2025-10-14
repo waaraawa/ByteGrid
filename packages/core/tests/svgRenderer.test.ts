@@ -616,5 +616,74 @@ describe('SVGRenderer', () => {
         expect(svg).toMatch(/width="\d+"/);
       });
     });
+
+    // colorScheme tests
+    describe('colorScheme option', () => {
+      it('should use default colors when colorScheme is "default"', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          colorScheme: 'default',
+        });
+
+        // Default blue color for Field1 is #93c5fd
+        expect(svg).toContain('#93c5fd');
+      });
+
+      it('should transform colors when colorScheme is "dark"', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          colorScheme: 'dark',
+        });
+
+        // Dark scheme should have different colors than default
+        expect(svg).not.toContain('#93c5fd'); // Should not have default blue
+        expect(svg).toContain('fill="#'); // Should have some transformed colors
+      });
+
+      it('should transform colors when colorScheme is "light"', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          colorScheme: 'light',
+        });
+
+        // Light scheme should have different colors than default
+        expect(svg).not.toContain('#93c5fd'); // Should not have default blue
+        expect(svg).toContain('fill="#'); // Should have some transformed colors
+      });
+
+      it('should use config.colorScheme when options.colorScheme is not provided', () => {
+        const configWithScheme: ByteGridConfig = {
+          ...sampleConfig,
+          colorScheme: 'dark',
+        };
+
+        const svg = renderSVG(configWithScheme, sampleBlocks);
+
+        // Should use dark scheme from config
+        expect(svg).not.toContain('#93c5fd');
+      });
+
+      it('should prioritize options.colorScheme over config.colorScheme', () => {
+        const configWithScheme: ByteGridConfig = {
+          ...sampleConfig,
+          colorScheme: 'dark',
+        };
+
+        const svg = renderSVG(configWithScheme, sampleBlocks, {
+          colorScheme: 'light',
+        });
+
+        // Should use light scheme from options, not dark from config
+        expect(svg).not.toContain('#93c5fd');
+      });
+
+      it('should apply color transformation to both grid blocks and legend', () => {
+        const svg = renderSVG(sampleConfig, sampleBlocks, {
+          colorScheme: 'dark',
+        });
+
+        // Both grid blocks and legend should use transformed colors
+        expect(svg).toContain('fill="#'); // Fill attribute exists
+        expect(svg).toContain('Field1'); // Legend exists
+        expect(svg).toContain('Field2'); // Legend exists
+      });
+    });
   });
 });
