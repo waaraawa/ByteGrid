@@ -99,12 +99,12 @@ describe('SVGRenderer', () => {
       expect(svg).toContain('<svg');
     });
 
-    it('should render byte numbers in cells', () => {
+    it('should render byte numbers in cells (hexadecimal)', () => {
       const svg = renderSVG(sampleConfig, sampleBlocks);
 
-      // Should contain byte numbers
-      expect(svg).toMatch(/>\s*0\s*</);
-      expect(svg).toMatch(/>\s*1\s*</);
+      // Should contain byte numbers in hex format
+      expect(svg).toMatch(/>\s*0x00\s*</);
+      expect(svg).toMatch(/>\s*0x01\s*</);
     });
 
     it('should handle blocks across multiple rows', () => {

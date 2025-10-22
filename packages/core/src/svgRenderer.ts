@@ -348,8 +348,10 @@ export function renderSVG(
     for (let col = 0; col < layout; col++) {
       const x = gridStartX + col * opts.cellWidth + opts.cellWidth / 2;
       const y = gridStartY - 10;
-      // For bit layout, show index 0-7 pattern, for byte layout show absolute position
-      const headerLabel = layoutUnit === 'bit' ? col % 8 : col;
+      // For bit layout, show index 0-7 pattern, for byte layout show hex position
+      const headerLabel = layoutUnit === 'bit'
+        ? col % 8
+        : '0x' + col.toString(16).toUpperCase().padStart(2, '0');
       svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="#666">${headerLabel}</text>`;
     }
   }
@@ -362,8 +364,9 @@ export function renderSVG(
         ? (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : bitfieldCellHeight)
         : (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : normalCellHeight);
       const startOffset = row * layout;
+      const hexOffset = '0x' + startOffset.toString(16).toUpperCase().padStart(2, '0');
       const textY = y + cellHeight / 2 + 4;
-      svg += `<text x="${gridStartX - 5}" y="${textY}" text-anchor="end" font-size="9" fill="#666">${startOffset}</text>`;
+      svg += `<text x="${gridStartX - 5}" y="${textY}" text-anchor="end" font-size="9" fill="#666">${hexOffset}</text>`;
     }
   }
 
@@ -383,9 +386,10 @@ export function renderSVG(
     if (layoutUnit !== 'bit') {
       for (let i = 0; i < block.span; i++) {
         const byteNum = block.offsetStart + i;
+        const hexNum = '0x' + byteNum.toString(16).toUpperCase().padStart(2, '0');
         const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
         const cellY = y + (cellHeight / 3); // Upper third for byte number
-        svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${byteNum}</text>`;
+        svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${hexNum}</text>`;
       }
     }
 
@@ -512,7 +516,14 @@ export function renderSVG(
       // Offset info
       const unit = layoutUnit === 'bit' ? 'bits' : 'bytes';
       const size = block.offsetEnd - block.offsetStart + 1;
-      svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${block.offsetStart}-${block.offsetEnd} (${size} ${unit})</text>`;
+      // Use hex for byte offsets, decimal for bit offsets
+      const offsetStartStr = layoutUnit === 'bit'
+        ? block.offsetStart.toString()
+        : '0x' + block.offsetStart.toString(16).toUpperCase().padStart(2, '0');
+      const offsetEndStr = layoutUnit === 'bit'
+        ? block.offsetEnd.toString()
+        : '0x' + block.offsetEnd.toString(16).toUpperCase().padStart(2, '0');
+      svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${offsetStartStr}-${offsetEndStr} (${size} ${unit})</text>`;
 
       // Bitfields (if any)
       if (block.bitfields && block.bitfields.length > 0) {

@@ -1,6 +1,6 @@
 {
   "name": "@bytegrid/obsidian-plugin",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ByteGrid Obsidian plugin",
   "main": "main.js",
   "scripts": {
@@ -14,7 +14,7 @@
   "author": "ByteGrid Contributors",
   "license": "MIT",
   "dependencies": {
-    "@bytegrid/core": "^0.1.0"
+    "@bytegrid/core": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

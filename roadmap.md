@@ -35,16 +35,21 @@
 - [x] Bit-unit layout mode (`layoutUnit: bit`)
 - [x] Suffix notation (`32b`, `4B`)
 - [x] Legend position control (`legendPosition: right/left/bottom/none`)
+- [x] Legend multi-column layout (`legendColumns`)
 - [x] Footer visibility control (`showFooter: true/false`)
-- [x] Comprehensive test coverage (114 tests)
+- [x] Color schemes (default, dark, light modes)
+- [x] Auto color assignment (`autoColor: true/false`)
+- [x] Comprehensive test coverage (141 tests)
 
 ### In Progress 🔄
-- [ ] Color schemes (dark, light modes)
 - [ ] Row/column labels customization
 - [ ] Cell padding/spacing options
 
 ### Planned Features 📋
 - [ ] Hex dump display (`showHexDump: true`)
+- [ ] Bit order selection (`bitOrder: 'msb'/'lsb'`)
+  - MSB first: 7-6-5-4-3-2-1-0 (default, current behavior)
+  - LSB first: 0-1-2-3-4-5-6-7
 - [ ] Field description tooltips
 - [ ] Value display formatting (hex, decimal, binary)
 - [ ] Endianness indicators
@@ -210,7 +215,6 @@
    - Handle large structures
 
 3. **Documentation** (Priority: High)
-   - Update CLAUDE.md with new options
    - Create user guide in docs/
    - Add more examples
    - API reference cleanup
