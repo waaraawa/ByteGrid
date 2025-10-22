@@ -1,0 +1,33 @@
+name: Manual Color Mode Example
+size: 24
+layout: 16
+autoColor: false  # Disable auto color assignment
+
+fields:
+  - offset: 0-3
+    name: Header
+    type: uint32_t
+    color: blue
+    description: "Explicit blue color"
+  - offset: 4-7
+    name: NoColor1
+    type: uint32_t
+    description: "No color specified = gray"
+  - offset: 8-11
+    name: Important
+    type: uint32_t
+    color: yellow
+    description: "Explicit yellow to highlight"
+  - offset: 12-15
+    name: NoColor2
+    type: uint32_t
+    description: "No color specified = gray"
+  - offset: 16-19
+    name: Footer
+    type: uint32_t
+    color: cyan
+    description: "Explicit cyan color"
+  - offset: 20-23
+    name: NoColor3
+    type: uint32_t
+    description: "No color specified = gray"

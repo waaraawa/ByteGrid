@@ -740,5 +740,55 @@ fields:
         expect(result.colorScheme).toBeUndefined();
       });
     });
+
+    // autoColor tests
+    describe('autoColor', () => {
+      it('should parse autoColor: true', () => {
+        const yaml = `
+name: Test
+size: 16
+autoColor: true
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.autoColor).toBe(true);
+      });
+
+      it('should parse autoColor: false', () => {
+        const yaml = `
+name: Test
+size: 16
+autoColor: false
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.autoColor).toBe(false);
+      });
+
+      it('should return undefined when autoColor is not specified', () => {
+        const yaml = `
+name: Test
+size: 16
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+`;
+
+        const result = parse(yaml);
+
+        expect(result.autoColor).toBeUndefined();
+      });
+    });
   });
 });

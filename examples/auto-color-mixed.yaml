@@ -1,0 +1,36 @@
+name: Mixed Color Mode Example
+size: 28
+layout: 16
+# autoColor: true (default) - mix auto and manual colors
+
+fields:
+  - offset: 0-3
+    name: MagicNumber
+    type: uint32_t
+    color: pink
+    description: "Custom color (explicit pink)"
+  - offset: 4-7
+    name: Version
+    type: uint32_t
+    description: "Auto-assigned (cyan)"
+  - offset: 8-11
+    name: Length
+    type: uint32_t
+    description: "Auto-assigned (yellow)"
+  - offset: 12-15
+    name: Reserved
+    type: reserved
+    description: "Always gray for reserved"
+  - offset: 16-19
+    name: Checksum
+    type: uint32_t
+    color: mint
+    description: "Custom color (explicit mint)"
+  - offset: 20-23
+    name: Timestamp
+    type: uint32_t
+    description: "Auto-assigned (orange)"
+  - offset: 24-27
+    name: Data
+    type: uint32_t
+    description: "Auto-assigned (purple)"

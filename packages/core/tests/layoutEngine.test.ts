@@ -109,10 +109,11 @@ describe('LayoutEngine', () => {
       expect(blocks[2].offsetEnd).toBe(11);
     });
 
-    it('should default to gray color for fields without color', () => {
+    it('should default to gray color for fields without color when autoColor is false', () => {
       const config: ByteGridConfig = {
         name: 'Test',
         size: 8,
+        autoColor: false,
         fields: [
           { offset: '0-3', name: 'Field1', type: 'uint32_t' },
         ],
@@ -382,6 +383,126 @@ describe('LayoutEngine', () => {
       expect(blocks).toHaveLength(2);
       expect(blocks[0].span).toBe(4);
       expect(blocks[1].span).toBe(4);
+    });
+  });
+
+  describe('autoColor feature', () => {
+    it('should auto-assign colors when autoColor is true (default)', () => {
+      const config: ByteGridConfig = {
+        name: 'Test',
+        size: 16,
+        layout: 16,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t' }, // No color specified
+          { offset: '4-7', name: 'Field2', type: 'uint32_t' }, // No color specified
+          { offset: '8-11', name: 'Field3', type: 'uint32_t' }, // No color specified
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(3);
+      // Should auto-assign: blue, cyan, yellow
+      expect(blocks[0].color).toBe('blue');
+      expect(blocks[1].color).toBe('cyan');
+      expect(blocks[2].color).toBe('yellow');
+    });
+
+    it('should use gray when autoColor is false and no color specified', () => {
+      const config: ByteGridConfig = {
+        name: 'Test',
+        size: 16,
+        layout: 16,
+        autoColor: false,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t' }, // No color specified
+          { offset: '4-7', name: 'Field2', type: 'uint32_t' }, // No color specified
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(2);
+      // Should default to gray
+      expect(blocks[0].color).toBe('gray');
+      expect(blocks[1].color).toBe('gray');
+    });
+
+    it('should respect explicit colors even when autoColor is true', () => {
+      const config: ByteGridConfig = {
+        name: 'Test',
+        size: 16,
+        layout: 16,
+        autoColor: true,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t', color: 'pink' }, // Explicit color
+          { offset: '4-7', name: 'Field2', type: 'uint32_t' }, // Auto-assign
+          { offset: '8-11', name: 'Field3', type: 'uint32_t', color: 'mint' }, // Explicit color
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(3);
+      expect(blocks[0].color).toBe('pink'); // Explicit
+      expect(blocks[1].color).toBe('cyan'); // Auto (fieldIndex=1 -> cyan)
+      expect(blocks[2].color).toBe('mint'); // Explicit
+    });
+
+    it('should use gray for padding/reserved fields regardless of autoColor', () => {
+      const config: ByteGridConfig = {
+        name: 'Test',
+        size: 16,
+        layout: 16,
+        autoColor: true,
+        fields: [
+          { offset: '0-3', name: 'Field1', type: 'uint32_t' }, // Auto-assign
+          { offset: '4-7', name: 'Reserved', type: 'reserved' }, // Should be gray
+          { offset: '8-11', name: 'Field2', type: 'uint32_t' }, // Auto-assign
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(3);
+      expect(blocks[0].color).toBe('blue'); // Auto
+      expect(blocks[1].color).toBe('gray'); // Reserved
+      expect(blocks[2].color).toBe('yellow'); // Auto (fieldIndex=2 -> yellow)
+    });
+
+    it('should cycle through colors for many fields', () => {
+      const config: ByteGridConfig = {
+        name: 'Test',
+        size: 36,
+        layout: 16,
+        autoColor: true,
+        fields: [
+          { offset: '0-3', name: 'F1', type: 'uint32_t' },
+          { offset: '4-7', name: 'F2', type: 'uint32_t' },
+          { offset: '8-11', name: 'F3', type: 'uint32_t' },
+          { offset: '12-15', name: 'F4', type: 'uint32_t' },
+          { offset: '16-19', name: 'F5', type: 'uint32_t' },
+          { offset: '20-23', name: 'F6', type: 'uint32_t' },
+          { offset: '24-27', name: 'F7', type: 'uint32_t' },
+          { offset: '28-31', name: 'F8', type: 'uint32_t' },
+          { offset: '32-35', name: 'F9', type: 'uint32_t' }, // Should cycle back to blue
+        ],
+      };
+
+      const blocks = createLayout(config);
+
+      expect(blocks).toHaveLength(9);
+      // First 8 colors
+      expect(blocks[0].color).toBe('blue');
+      expect(blocks[1].color).toBe('cyan');
+      expect(blocks[2].color).toBe('yellow');
+      expect(blocks[3].color).toBe('green');
+      expect(blocks[4].color).toBe('orange');
+      expect(blocks[5].color).toBe('purple');
+      expect(blocks[6].color).toBe('mint');
+      expect(blocks[7].color).toBe('pink');
+      // Cycle back
+      expect(blocks[8].color).toBe('blue');
     });
   });
 });

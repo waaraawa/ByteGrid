@@ -1,0 +1,38 @@
+name: Auto Color Basic Example
+size: 32
+layout: 16
+# autoColor: true is the default
+
+fields:
+  - offset: 0-3
+    name: Field1
+    type: uint32_t
+    description: "Auto-assigned blue"
+  - offset: 4-7
+    name: Field2
+    type: uint32_t
+    description: "Auto-assigned cyan"
+  - offset: 8-11
+    name: Field3
+    type: uint32_t
+    description: "Auto-assigned yellow"
+  - offset: 12-15
+    name: Field4
+    type: uint32_t
+    description: "Auto-assigned green"
+  - offset: 16-19
+    name: Field5
+    type: uint32_t
+    description: "Auto-assigned orange"
+  - offset: 20-23
+    name: Field6
+    type: uint32_t
+    description: "Auto-assigned purple"
+  - offset: 24-27
+    name: Field7
+    type: uint32_t
+    description: "Auto-assigned mint"
+  - offset: 28-31
+    name: Field8
+    type: uint32_t
+    description: "Auto-assigned pink"

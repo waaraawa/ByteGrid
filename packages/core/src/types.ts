@@ -91,6 +91,7 @@ export interface ByteGridConfig {
   layout?: number; // Units per row (default: 16), unit depends on layoutUnit
   layoutUnit?: LayoutUnit; // 'byte' (default) or 'bit'
   colorScheme?: ColorScheme;
+  autoColor?: boolean; // Auto-assign colors to fields (default: true)
   legendPosition?: LegendPosition; // 'right' (default), 'left', 'bottom', or 'none'
   legendColumns?: number; // Number of columns in legend (default: 1)
   showFooter?: boolean; // Show footer with total size and layout info (default: true)

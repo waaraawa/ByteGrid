@@ -17,6 +17,12 @@ export function createLayout(config: ByteGridConfig): LayoutBlock[] {
   const layoutUnit = config.layoutUnit || 'byte';
   const blocks: LayoutBlock[] = [];
 
+  // Auto color enabled by default
+  const autoColor = config.autoColor !== undefined ? config.autoColor : true;
+
+  // Colors for auto-assignment (excluding gray for non-padding fields)
+  const autoColors: ColorName[] = ['blue', 'cyan', 'yellow', 'green', 'orange', 'purple', 'mint', 'pink'];
+
   // Convert offset to bits for unified processing
   const toBits = (offset: ReturnType<typeof parseOffset>): { start: number; end: number; size: number } => {
     if (layoutUnit === 'bit') {
@@ -31,11 +37,24 @@ export function createLayout(config: ByteGridConfig): LayoutBlock[] {
     return { start: offset.start, end: offset.end, size: offset.size };
   };
 
-  for (const field of config.fields) {
+  for (let fieldIndex = 0; fieldIndex < config.fields.length; fieldIndex++) {
+    const field = config.fields[fieldIndex];
     const offset = parseOffset(field.offset);
     const offsetInUnits = toBits(offset);
-    const color = (field.color || 'gray') as ColorName;
     const isPadding = field.type === 'reserved' || field.type === 'padding';
+
+    // Determine color
+    let color: ColorName;
+    if (field.color) {
+      // Explicit color specified
+      color = field.color as ColorName;
+    } else if (autoColor && !isPadding) {
+      // Auto-assign color for non-padding fields
+      color = autoColors[fieldIndex % autoColors.length];
+    } else {
+      // Default to gray (manual mode or padding)
+      color = 'gray';
+    }
 
     // Check if field spans multiple rows
     const startRow = Math.floor(offsetInUnits.start / layout);

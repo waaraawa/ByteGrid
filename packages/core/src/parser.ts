@@ -242,6 +242,11 @@ export function parse(source: string): ByteGridConfig {
     ? (obj.colorScheme as 'default' | 'dark' | 'light')
     : undefined;
 
+  // Parse autoColor (optional, default: true)
+  const autoColor = obj.autoColor !== undefined && typeof obj.autoColor === 'boolean'
+    ? obj.autoColor
+    : undefined;
+
   // Parse legendPosition (optional)
   const legendPosition = obj.legendPosition && typeof obj.legendPosition === 'string'
     ? (obj.legendPosition as 'right' | 'left' | 'bottom' | 'none')
@@ -266,6 +271,7 @@ export function parse(source: string): ByteGridConfig {
     layout,
     layoutUnit: finalLayoutUnit,
     colorScheme,
+    autoColor,
     legendPosition,
     legendColumns,
     showFooter,

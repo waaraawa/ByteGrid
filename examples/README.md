@@ -61,6 +61,25 @@ This folder contains example files for the ByteGrid plugin.
 - **Bitfield example**: 16 CPU flags
 - CF, ZF, SF, IF, DF, OF, IOPL, etc.
 
+### Auto Color Examples
+
+#### 8. auto-color-examples.md
+- **Interactive guide** with 4 examples showing automatic color assignment
+- Open this file in Obsidian to see live examples
+- Explains auto color modes and behavior
+
+#### 9. auto-color-basic.yaml
+- Basic auto color example (8 fields, 8 colors)
+- Default behavior: colors assigned automatically
+
+#### 10. auto-color-manual.yaml
+- Manual color mode (`autoColor: false`)
+- Only explicit colors shown, others gray
+
+#### 11. auto-color-mixed.yaml
+- Mixed mode: combine auto and manual colors
+- Explicit colors take precedence
+
 ## Important Notes
 
 ⚠️ **Watch Out for Indentation When Copying**
@@ -81,32 +100,56 @@ To visualize a new structure:
 name: Structure Name
 size: total byte size
 layout: 16  # bytes per row (optional, default: 16)
+layoutUnit: byte  # byte or bit (optional, auto-inferred from suffix)
+
+# Color options
+autoColor: true  # auto-assign colors (optional, default: true)
+colorScheme: default  # default, dark, or light (optional, default: default)
+
+# Legend options
 legendPosition: right  # right, left, bottom, none (optional, default: right)
+legendColumns: 1  # number of columns in legend (optional, default: 1)
+
+# Other options
 showFooter: true  # show/hide footer (optional, default: true)
+
 fields:
   - offset: 0-3
     name: FieldName
     type: uint32_t
-    color: blue  # blue, cyan, yellow, green, orange, purple, mint, pink, gray
+    color: blue  # blue, cyan, yellow, green, orange, purple, mint, pink, gray (optional)
     description: "Description"  # optional
 ```
 
+### Color Options Explained
+
+**autoColor** (default: `true`):
+- `true`: Fields without explicit colors get auto-assigned (blue, cyan, yellow, green, orange, purple, mint, pink)
+- `false`: Fields without explicit colors default to gray
+
+**colorScheme** (default: `default`):
+- `default`: Original pastel colors
+- `dark`: Reduced saturation and lightness (easier on eyes)
+- `light`: Increased lightness (better for bright backgrounds)
+
+**Tip**: Start with `autoColor: true` and only specify colors for fields you want to emphasize!
+
 ## Bit-Level Layout Examples
 
-### 8. simple-bit-layout.yaml
+### 12. simple-bit-layout.yaml
 - Basic bit-level layout test (16 bits)
 - **Suffix notation**: `size: 16b`, `layout: 16b`, `offset: 0-7b`
 - `layoutUnit` can be omitted (auto-inferred from suffix)
 
-### 9. nibble-test.yaml
+### 13. nibble-test.yaml
 - 4-bit field (nibble) test
 - Each nibble represented independently
 
-### 10. mixed-bit-byte.yaml
+### 14. mixed-bit-byte.yaml
 - Mixed bit and byte offsets
 - `0-3b` (bit), `1B` (Byte), `2-3` (byte, default)
 
-### 11. ipv4-bit-layout.yaml
+### 15. ipv4-bit-layout.yaml
 - IPv4 header in bit-level representation
 - Sub-byte fields like Version(4bit) + IHL(4bit)
 
