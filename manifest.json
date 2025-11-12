@@ -3,8 +3,8 @@
   "name": "ByteGrid",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "Visualize binary data and C struct memory layouts",
+  "description": "Visualize binary data and C struct memory layouts.",
   "author": "waaraawa",
-  "authorUrl": "https://github.com/waaraawa/ByteGrid",
+  "authorUrl": "https://github.com/waaraawa",
   "isDesktopOnly": false
 }
