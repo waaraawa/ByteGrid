@@ -35,8 +35,8 @@ const copyPlugin = {
         // Copy main.js
         fs.copyFileSync('main.js', path.join(OBSIDIAN_PLUGIN_DIR, 'main.js'));
 
-        // Copy manifest.json
-        fs.copyFileSync('manifest.json', path.join(OBSIDIAN_PLUGIN_DIR, 'manifest.json'));
+        // Copy manifest.json from root
+        fs.copyFileSync('../../manifest.json', path.join(OBSIDIAN_PLUGIN_DIR, 'manifest.json'));
 
         // Copy styles.css
         fs.copyFileSync('styles.css', path.join(OBSIDIAN_PLUGIN_DIR, 'styles.css'));
