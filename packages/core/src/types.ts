@@ -3,9 +3,9 @@
  */
 
 /**
- * Supported data types in ByteGrid
+ * Base data types in ByteGrid (non-array)
  */
-export type DataType =
+export type BaseDataType =
   | 'char'
   | 'int8_t'
   | 'uint8_t'
@@ -22,7 +22,13 @@ export type DataType =
   | 'double'
   | 'reserved'
   | 'padding'
-  | string; // For array types like 'char[4]'
+  | 'bits';
+
+/**
+ * Supported data types in ByteGrid (includes array types)
+ * Array types follow the pattern: type[size] (e.g., 'char[4]', 'uint8_t[16]')
+ */
+export type DataType = BaseDataType | `${BaseDataType}[${number}]`;
 
 /**
  * Endianness for multi-byte fields

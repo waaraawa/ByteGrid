@@ -2,9 +2,7 @@ import { Plugin } from 'obsidian';
 import { parse, validate, createLayout, renderSVG } from '../../core/dist/index.js';
 
 export default class ByteGridPlugin extends Plugin {
-  async onload(): Promise<void> {
-    console.log('ByteGrid plugin loading...');
-
+  onload(): void {
     this.registerMarkdownCodeBlockProcessor('bytegrid', (source, el, ctx) => {
       try {
         // Parse YAML input
@@ -19,21 +17,23 @@ export default class ByteGridPlugin extends Plugin {
         // Render to SVG
         const svg = renderSVG(config, blocks);
 
-        // Display SVG
-        el.innerHTML = svg;
+        // Display SVG safely using DOMParser
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+        const svgElement = svgDoc.documentElement;
+
+        if (svgElement.tagName === 'svg') {
+          el.appendChild(svgElement);
+        } else {
+          throw new Error('Invalid SVG output');
+        }
       } catch (error) {
         // Display error
         const container = el.createDiv({ cls: 'bytegrid-error' });
-        container.createEl('h4', { text: '❌ ByteGrid Error' });
+        container.createEl('h4', { text: 'ByteGrid error' });
         container.createEl('p', { text: error instanceof Error ? error.message : String(error) });
         container.createEl('pre', { text: source });
       }
     });
-
-    console.log('ByteGrid plugin loaded successfully!');
-  }
-
-  onunload(): void {
-    console.log('ByteGrid plugin unloading...');
   }
 }

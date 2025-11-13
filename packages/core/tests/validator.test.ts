@@ -5,7 +5,7 @@
 
 import { validate, parseOffset } from '../src/validator';
 import { ValidationError } from '../src/errors';
-import { ByteGridConfig } from '../src/types';
+import { ByteGridConfig, DataType } from '../src/types';
 
 describe('Validator', () => {
   describe('parseOffset()', () => {
@@ -111,7 +111,7 @@ describe('Validator', () => {
         name: 'Test',
         size: 16,
         fields: [
-          { offset: '0-3', name: 'Field1', type: 'invalid_type' },
+          { offset: '0-3', name: 'Field1', type: 'invalid_type' as DataType },
         ],
       };
 

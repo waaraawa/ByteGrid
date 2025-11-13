@@ -4,7 +4,7 @@
  */
 
 import * as yaml from 'js-yaml';
-import { ByteGridConfig, Field } from './types';
+import { ByteGridConfig, Field, DataType } from './types';
 import { ParseError } from './errors';
 
 /**
@@ -173,16 +173,28 @@ export function parse(source: string): ByteGridConfig {
     const parsedField: Field = {
       offset: offset,
       name: field.name,
-      type: field.type,
+      type: field.type as DataType,
     };
 
     // Add optional properties if present
     if (field.value !== undefined) {
+      if (typeof field.value !== 'string' && typeof field.value !== 'number' && typeof field.value !== 'boolean') {
+        throw new ParseError(
+          `Field at index ${index} has invalid value: expected string, number, or boolean`,
+          index
+        );
+      }
       parsedField.value = String(field.value);
     }
 
     if (field.description !== undefined) {
-      parsedField.description = String(field.description);
+      if (typeof field.description !== 'string') {
+        throw new ParseError(
+          `Field at index ${index} has invalid description: expected string`,
+          index
+        );
+      }
+      parsedField.description = field.description;
     }
 
     if (field.color !== undefined && typeof field.color === 'string') {
@@ -226,11 +238,22 @@ export function parse(source: string): ByteGridConfig {
           );
         }
 
-        return {
+        const result: { name: string; bits: string; description?: string } = {
           name: bitfield.name,
           bits: bitfield.bits,
-          description: bitfield.description !== undefined ? String(bitfield.description) : undefined,
         };
+
+        if (bitfield.description !== undefined) {
+          if (typeof bitfield.description !== 'string') {
+            throw new ParseError(
+              `Field at index ${index}, bitfield at index ${bfIndex} has invalid description: expected string`,
+              index
+            );
+          }
+          result.description = bitfield.description;
+        }
+
+        return result;
       });
     }
 

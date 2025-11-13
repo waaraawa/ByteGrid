@@ -47,7 +47,7 @@ export function createLayout(config: ByteGridConfig): LayoutBlock[] {
     let color: ColorName;
     if (field.color) {
       // Explicit color specified
-      color = field.color as ColorName;
+      color = field.color;
     } else if (autoColor && !isPadding) {
       // Auto-assign color for non-padding fields
       color = autoColors[fieldIndex % autoColors.length];
