@@ -30,7 +30,7 @@ export default class ByteGridPlugin extends Plugin {
       } catch (error) {
         // Display error
         const container = el.createDiv({ cls: 'bytegrid-error' });
-        container.createEl('h4', { text: 'bytegrid error' });
+        container.createEl('h4', { text: 'Bytegrid error' });
         container.createEl('p', { text: error instanceof Error ? error.message : String(error) });
         container.createEl('pre', { text: source });
       }
