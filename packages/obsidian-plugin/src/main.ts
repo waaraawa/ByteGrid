@@ -1,5 +1,5 @@
 import { Plugin } from 'obsidian';
-import { parse, validate, createLayout, renderSVG } from '../../core/dist/index.js';
+import { parse, validate, createLayout, renderSVG } from '@bytegrid/core';
 
 export default class ByteGridPlugin extends Plugin {
   onload(): void {
