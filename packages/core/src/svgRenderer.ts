@@ -3,7 +3,7 @@
  * Renders LayoutBlocks to SVG string
  */
 
-import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName, LegendPosition, ColorScheme } from './types';
+import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName, LegendPosition, ColorScheme, CustomTheme } from './types';
 
 /**
  * Color palette mapping (default scheme)
@@ -115,6 +115,12 @@ function rgbToHex(r: number, g: number, b: number): string {
  * Transform color based on color scheme
  */
 function transformColor(hexColor: string, scheme: ColorScheme): string {
+  // If the color is a CSS variable, we can't transform it via JS,
+  // we rely on the theme to provide the correct dark/light variants natively.
+  if (hexColor.startsWith('var(')) {
+    return hexColor;
+  }
+
   if (scheme === 'default') {
     return hexColor;
   }
@@ -150,6 +156,15 @@ const DEFAULT_OPTIONS: Required<RenderOptions> = {
   cellHeight: 30,
   fontSize: 10,
   uniformRowHeight: false, // Bitfield rows are taller by default
+  theme: {
+    background: 'white',
+    textNormal: '#333',
+    textMuted: '#666',
+    textFaint: '#999',
+    border: '#333',
+    gridLine: '#ccc',
+    gridLineSubtle: '#ddd',
+  }
 };
 
 /**
@@ -166,6 +181,15 @@ export function renderSVG(
   options?: RenderOptions
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
+  const theme: CustomTheme = opts.theme || {
+    background: 'white',
+    textNormal: '#333',
+    textMuted: '#666',
+    textFaint: '#999',
+    border: '#333',
+    gridLine: '#ccc',
+    gridLineSubtle: '#ddd',
+  };
   const layoutUnit = config.layoutUnit || 'byte';
   const layout = config.layout || 16;
 
@@ -338,10 +362,10 @@ export function renderSVG(
     return block.bitfields && block.bitfields.length > 0 ? bitfieldCellHeight : normalCellHeight;
   };
 
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" style="font-family: monospace; background: white;">`;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" style="font-family: monospace; background: ${theme.background};">`;
 
   // Title
-  svg += `<text x="${totalWidth / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold">${escapeXml(config.name)}</text>`;
+  svg += `<text x="${totalWidth / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="${theme.textNormal}">${escapeXml(config.name)}</text>`;
 
   // Column headers
   if (opts.showGrid) {
@@ -352,7 +376,7 @@ export function renderSVG(
       const headerLabel = layoutUnit === 'bit'
         ? col % 8
         : '0x' + col.toString(16).toUpperCase().padStart(2, '0');
-      svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="#666">${headerLabel}</text>`;
+      svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="${theme.textMuted}">${headerLabel}</text>`;
     }
   }
 
@@ -366,7 +390,7 @@ export function renderSVG(
       const startOffset = row * layout;
       const hexOffset = '0x' + startOffset.toString(16).toUpperCase().padStart(2, '0');
       const textY = y + cellHeight / 2 + 4;
-      svg += `<text x="${gridStartX - 5}" y="${textY}" text-anchor="end" font-size="9" fill="#666">${hexOffset}</text>`;
+      svg += `<text x="${gridStartX - 5}" y="${textY}" text-anchor="end" font-size="9" fill="${theme.textMuted}">${hexOffset}</text>`;
     }
   }
 
@@ -376,11 +400,11 @@ export function renderSVG(
     const y = rowYPositions.get(block.row) || gridStartY;
     const width = block.span * opts.cellWidth;
     const cellHeight = getCellHeight(block);
-    const baseColor = COLORS[block.color] || COLORS.gray;
+    const baseColor = theme.palette?.[block.color] || COLORS[block.color] || COLORS.gray;
     const color = transformColor(baseColor, effectiveColorScheme);
 
     // Draw block rectangle
-    svg += `<rect x="${x}" y="${y}" width="${width}" height="${cellHeight}" fill="${color}" stroke="#333" stroke-width="1"/>`;
+    svg += `<rect x="${x}" y="${y}" width="${width}" height="${cellHeight}" fill="${color}" stroke="${theme.border}" stroke-width="1"/>`;
 
     // Draw numbers inside cells (only for byte layout)
     if (layoutUnit !== 'bit') {
@@ -389,7 +413,8 @@ export function renderSVG(
         const hexNum = '0x' + byteNum.toString(16).toUpperCase().padStart(2, '0');
         const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
         const cellY = y + (cellHeight / 3); // Upper third for byte number
-        svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="#333">${hexNum}</text>`;
+        const textFill = theme.cellText || theme.textNormal;
+        svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="${textFill}">${hexNum}</text>`;
       }
     }
 
@@ -402,14 +427,15 @@ export function renderSVG(
         // Draw vertical lines dividing 8 bits
         for (let bit = 1; bit < 8; bit++) {
           const lineX = cellX + bit * bitCellWidth;
-          svg += `<line x1="${lineX}" y1="${y}" x2="${lineX}" y2="${y + cellHeight}" stroke="#ccc" stroke-width="0.5"/>`;
+          svg += `<line x1="${lineX}" y1="${y}" x2="${lineX}" y2="${y + cellHeight}" stroke="${theme.gridLine}" stroke-width="0.5"/>`;
         }
 
         // Draw bit numbers (0-7)
         for (let bit = 0; bit < 8; bit++) {
           const bitX = cellX + bit * bitCellWidth + bitCellWidth / 2;
           const bitY = y + (cellHeight * 2 / 3) + 5; // Lower third for bit numbers
-          svg += `<text x="${bitX}" y="${bitY}" text-anchor="middle" font-size="7" fill="#666">${7 - bit}</text>`;
+          const bitTextFill = theme.cellTextMuted || theme.textMuted;
+          svg += `<text x="${bitX}" y="${bitY}" text-anchor="middle" font-size="7" fill="${bitTextFill}">${7 - bit}</text>`;
         }
       }
     }
@@ -422,9 +448,9 @@ export function renderSVG(
       // Every 8 bits: darker dotted line (byte boundary)
       // Other bits: lighter dotted line (bit boundary)
       if (col % 8 === 0) {
-        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>`;
+        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="${theme.textFaint}" stroke-width="1" stroke-dasharray="3,3"/>`;
       } else {
-        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+        svg += `<line x1="${lineX}" y1="${gridStartY}" x2="${lineX}" y2="${gridStartY + gridHeight}" stroke="${theme.gridLineSubtle}" stroke-width="0.5" stroke-dasharray="2,2"/>`;
       }
     }
   }
@@ -451,7 +477,7 @@ export function renderSVG(
       legendTitleY = legendStartY - 20;
     }
 
-    svg += `<text x="${legendX}" y="${legendTitleY}" font-size="12" font-weight="bold" fill="#333">Fields</text>`;
+    svg += `<text x="${legendX}" y="${legendTitleY}" font-size="12" font-weight="bold" fill="${theme.textNormal}">Fields</text>`;
 
     // Group blocks by field name to avoid duplicates
     const uniqueFields = new Map<string, LayoutBlock>();
@@ -501,17 +527,17 @@ export function renderSVG(
       const x = legendX + col * legendColumnWidth;
       const y = rowYPositions[row];
 
-      const baseColor = COLORS[block.color] || COLORS.gray;
+      const baseColor = theme.palette?.[block.color] || COLORS[block.color] || COLORS.gray;
       const color = transformColor(baseColor, effectiveColorScheme);
 
       // Color box
-      svg += `<rect x="${x}" y="${y}" width="20" height="20" fill="${color}" stroke="#333" stroke-width="1"/>`;
+      svg += `<rect x="${x}" y="${y}" width="20" height="20" fill="${color}" stroke="${theme.border}" stroke-width="1"/>`;
 
       // Field name
-      svg += `<text x="${x + 30}" y="${y + 12}" font-size="11" font-weight="bold" fill="#333">${escapeXml(fieldName)}</text>`;
+      svg += `<text x="${x + 30}" y="${y + 12}" font-size="11" font-weight="bold" fill="${theme.textNormal}">${escapeXml(fieldName)}</text>`;
 
       // Type
-      svg += `<text x="${x + 30}" y="${y + 24}" font-size="9" fill="#666">${escapeXml(block.fieldType)}</text>`;
+      svg += `<text x="${x + 30}" y="${y + 24}" font-size="9" fill="${theme.textMuted}">${escapeXml(block.fieldType)}</text>`;
 
       // Offset info
       const unit = layoutUnit === 'bit' ? 'bits' : 'bytes';
@@ -523,15 +549,15 @@ export function renderSVG(
       const offsetEndStr = layoutUnit === 'bit'
         ? block.offsetEnd.toString()
         : '0x' + block.offsetEnd.toString(16).toUpperCase().padStart(2, '0');
-      svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="#999">offset: ${offsetStartStr}-${offsetEndStr} (${size} ${unit})</text>`;
+      svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="${theme.textFaint}">offset: ${offsetStartStr}-${offsetEndStr} (${size} ${unit})</text>`;
 
       // Bitfields (if any)
       if (block.bitfields && block.bitfields.length > 0) {
-        svg += `<text x="${x + 30}" y="${y + 48}" font-size="9" font-weight="bold" fill="#666">Bits:</text>`;
+        svg += `<text x="${x + 30}" y="${y + 48}" font-size="9" font-weight="bold" fill="${theme.textMuted}">Bits:</text>`;
 
         block.bitfields.forEach((bf, bfIndex) => {
           const bfY = y + 60 + bfIndex * 12;
-          svg += `<text x="${x + 35}" y="${bfY}" font-size="8" fill="#888">`;
+          svg += `<text x="${x + 35}" y="${bfY}" font-size="8" fill="${theme.textFaint}">`;
           svg += `bit ${escapeXml(bf.bits)}: ${escapeXml(bf.name)}`;
           svg += `</text>`;
         });
@@ -546,7 +572,7 @@ export function renderSVG(
     const footerY = totalHeight - 40;
     const sizeUnit = layoutUnit === 'bit' ? 'bits' : 'bytes';
     const layoutUnitText = layoutUnit === 'bit' ? 'bits/row' : 'bytes/row';
-    svg += `<text x="${totalWidth / 2}" y="${footerY}" text-anchor="middle" font-size="11" fill="#999">Total size: ${config.size} ${sizeUnit} | Layout: ${layout} ${layoutUnitText}</text>`;
+    svg += `<text x="${totalWidth / 2}" y="${footerY}" text-anchor="middle" font-size="11" fill="${theme.textFaint}">Total size: ${config.size} ${sizeUnit} | Layout: ${layout} ${layoutUnitText}</text>`;
   }
 
   svg += `</svg>`;

@@ -14,7 +14,16 @@ const prod = process.argv[2] === 'production';
 const watch = process.argv[2] === '--watch';
 
 // Obsidian vault plugin directory
-const OBSIDIAN_PLUGIN_DIR = '/Users/jinjung/Dropbox/obsidian/.obsidian/plugins/bytegrid';
+let OBSIDIAN_PLUGIN_DIR = process.env.OBSIDIAN_PLUGIN_DIR;
+try {
+  const envContent = fs.readFileSync('.env', 'utf8');
+  const match = envContent.match(/^OBSIDIAN_PLUGIN_DIR=(.*)$/m);
+  if (match) {
+    OBSIDIAN_PLUGIN_DIR = match[1].trim();
+  }
+} catch (e) {
+  // Ignore if .env doesn't exist
+}
 
 // Plugin to copy files to Obsidian after build
 const copyPlugin = {
@@ -27,6 +36,11 @@ const copyPlugin = {
       }
 
       try {
+        if (!OBSIDIAN_PLUGIN_DIR) {
+          console.log('ℹ️ OBSIDIAN_PLUGIN_DIR is not set, skipping copy to Obsidian vault');
+          return;
+        }
+
         // Ensure directory exists
         if (!fs.existsSync(OBSIDIAN_PLUGIN_DIR)) {
           fs.mkdirSync(OBSIDIAN_PLUGIN_DIR, { recursive: true });

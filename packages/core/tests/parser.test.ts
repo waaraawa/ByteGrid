@@ -3,8 +3,19 @@
  * Tests for parsing YAML input to ByteGridConfig
  */
 
-import { parse } from '../src/parser';
+import * as yamlModule from 'js-yaml';
+import { parse as coreParse } from '../src/parser';
 import { ParseError } from '../src/errors';
+
+function parse(source: string) {
+  try {
+    return coreParse(yamlModule.load(source));
+  } catch(error) {
+    throw new ParseError(
+      `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
 
 describe('Parser', () => {
   describe('parse()', () => {

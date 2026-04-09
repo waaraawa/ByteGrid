@@ -3,28 +3,16 @@
  * Parses YAML input to ByteGridConfig
  */
 
-import * as yaml from 'js-yaml';
 import { ByteGridConfig, Field, DataType } from './types';
 import { ParseError } from './errors';
 
 /**
  * Parse YAML string to ByteGridConfig
- * @param source YAML string
+ * @param parsed Parsed YAML object
  * @returns Parsed ByteGridConfig
  * @throws ParseError if parsing fails or required fields are missing
  */
-export function parse(source: string): ByteGridConfig {
-  let parsed: unknown;
-
-  // Parse YAML
-  try {
-    parsed = yaml.load(source);
-  } catch (error) {
-    throw new ParseError(
-      `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-
+export function parse(parsed: unknown): ByteGridConfig {
   // Validate parsed result is an object
   if (!parsed || typeof parsed !== 'object') {
     throw new ParseError('Invalid YAML: expected an object');

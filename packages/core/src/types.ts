@@ -133,6 +133,22 @@ export interface LayoutBlock {
 }
 
 /**
+ * Custom theme variables for rendering (e.g., for Obsidian integration)
+ */
+export interface CustomTheme {
+  background: string;
+  textNormal: string;
+  textMuted: string;
+  textFaint: string;
+  border: string;
+  gridLine: string;
+  gridLineSubtle: string;
+  cellText?: string;
+  cellTextMuted?: string;
+  palette?: Partial<Record<ColorName, string>>;
+}
+
+/**
  * Rendering options
  */
 export interface RenderOptions {
@@ -147,4 +163,5 @@ export interface RenderOptions {
   cellHeight?: number;
   fontSize?: number;
   uniformRowHeight?: boolean; // If true, all rows have same height. If false (default), bitfield rows are taller
+  theme?: CustomTheme; // Custom theme overrides
 }
