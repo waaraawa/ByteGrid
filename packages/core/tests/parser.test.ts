@@ -4,13 +4,14 @@
  */
 
 import * as yamlModule from 'js-yaml';
+import { ByteGridConfig } from '../src/types';
 import { parse as coreParse } from '../src/parser';
 import { ParseError } from '../src/errors';
 
-function parse(source: string) {
+function parse(source: string): ByteGridConfig {
   try {
     return coreParse(yamlModule.load(source));
-  } catch(error) {
+  } catch (error) {
     throw new ParseError(
       `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`
     );
@@ -139,8 +140,9 @@ fields:
       const field = result.fields[0];
       expect(field.bitfields).toBeDefined();
       expect(field.bitfields).toHaveLength(3);
-      expect(field.bitfields![0].name).toBe('CWR');
-      expect(field.bitfields![0].bits).toBe('7');
+      const bitfields = field.bitfields ?? [];
+      expect(bitfields[0].name).toBe('CWR');
+      expect(bitfields[0].bits).toBe('7');
     });
 
     it('should throw ParseError for invalid YAML', () => {

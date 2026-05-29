@@ -97,9 +97,7 @@ describe('Validator', () => {
       const config: ByteGridConfig = {
         name: 'Test',
         size: 16,
-        fields: [
-          { offset: '20-23', name: 'Field1', type: 'uint32_t' },
-        ],
+        fields: [{ offset: '20-23', name: 'Field1', type: 'uint32_t' }],
       };
 
       expect(() => validate(config)).toThrow(ValidationError);
@@ -110,9 +108,7 @@ describe('Validator', () => {
       const config: ByteGridConfig = {
         name: 'Test',
         size: 16,
-        fields: [
-          { offset: '0-3', name: 'Field1', type: 'invalid_type' as DataType },
-        ],
+        fields: [{ offset: '0-3', name: 'Field1', type: 'invalid_type' as DataType }],
       };
 
       expect(() => validate(config)).toThrow(ValidationError);
@@ -178,9 +174,7 @@ describe('Validator', () => {
       const config: ByteGridConfig = {
         name: 'Test',
         size: 16,
-        fields: [
-          { offset: 'invalid', name: 'Field1', type: 'uint32_t' },
-        ],
+        fields: [{ offset: 'invalid', name: 'Field1', type: 'uint32_t' }],
       };
 
       expect(() => validate(config)).toThrow(ValidationError);
@@ -215,9 +209,7 @@ describe('Validator', () => {
             offset: '0',
             name: 'Flags',
             type: 'uint8_t',
-            bitfields: [
-              { name: 'Bit', bits: 'invalid' },
-            ],
+            bitfields: [{ name: 'Bit', bits: 'invalid' }],
           },
         ],
       };

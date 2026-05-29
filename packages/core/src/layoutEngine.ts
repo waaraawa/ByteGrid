@@ -21,17 +21,32 @@ export function createLayout(config: ByteGridConfig): LayoutBlock[] {
   const autoColor = config.autoColor !== undefined ? config.autoColor : true;
 
   // Colors for auto-assignment (excluding gray for non-padding fields)
-  const autoColors: ColorName[] = ['blue', 'cyan', 'yellow', 'green', 'orange', 'purple', 'mint', 'pink'];
+  const autoColors: ColorName[] = [
+    'blue',
+    'cyan',
+    'yellow',
+    'green',
+    'orange',
+    'purple',
+    'mint',
+    'pink',
+  ];
 
   // Convert offset to bits for unified processing
-  const toBits = (offset: ReturnType<typeof parseOffset>): { start: number; end: number; size: number } => {
+  const toBits = (
+    offset: ReturnType<typeof parseOffset>
+  ): { start: number; end: number; size: number } => {
     if (layoutUnit === 'bit') {
       // In bit layout mode, convert everything to bits
       if (offset.unit === 'bit') {
         return { start: offset.start, end: offset.end, size: offset.size };
       }
       // Convert byte offset to bits
-      return { start: offset.start * 8, end: offset.end * 8 + 7, size: (offset.end - offset.start + 1) * 8 };
+      return {
+        start: offset.start * 8,
+        end: offset.end * 8 + 7,
+        size: (offset.end - offset.start + 1) * 8,
+      };
     }
     // In byte layout mode, keep as bytes
     return { start: offset.start, end: offset.end, size: offset.size };

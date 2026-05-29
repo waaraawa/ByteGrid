@@ -38,9 +38,10 @@ export function parse(parsed: unknown): ByteGridConfig {
   }
 
   // Parse layoutUnit (optional)
-  let layoutUnit: 'byte' | 'bit' | undefined = obj.layoutUnit && typeof obj.layoutUnit === 'string'
-    ? (obj.layoutUnit as 'byte' | 'bit')
-    : undefined;
+  let layoutUnit: 'byte' | 'bit' | undefined =
+    obj.layoutUnit && typeof obj.layoutUnit === 'string'
+      ? (obj.layoutUnit as 'byte' | 'bit')
+      : undefined;
 
   // Parse layout (optional, defaults to 16) and infer layoutUnit if not specified
   let layout: number;
@@ -166,7 +167,11 @@ export function parse(parsed: unknown): ByteGridConfig {
 
     // Add optional properties if present
     if (field.value !== undefined) {
-      if (typeof field.value !== 'string' && typeof field.value !== 'number' && typeof field.value !== 'boolean') {
+      if (
+        typeof field.value !== 'string' &&
+        typeof field.value !== 'number' &&
+        typeof field.value !== 'boolean'
+      ) {
         throw new ParseError(
           `Field at index ${index} has invalid value: expected string, number, or boolean`,
           index
@@ -249,29 +254,30 @@ export function parse(parsed: unknown): ByteGridConfig {
   });
 
   // Parse colorScheme (optional)
-  const colorScheme = obj.colorScheme && typeof obj.colorScheme === 'string'
-    ? (obj.colorScheme as 'default' | 'dark' | 'light')
-    : undefined;
+  const colorScheme =
+    obj.colorScheme && typeof obj.colorScheme === 'string'
+      ? (obj.colorScheme as 'default' | 'dark' | 'light')
+      : undefined;
 
   // Parse autoColor (optional, default: true)
-  const autoColor = obj.autoColor !== undefined && typeof obj.autoColor === 'boolean'
-    ? obj.autoColor
-    : undefined;
+  const autoColor =
+    obj.autoColor !== undefined && typeof obj.autoColor === 'boolean' ? obj.autoColor : undefined;
 
   // Parse legendPosition (optional)
-  const legendPosition = obj.legendPosition && typeof obj.legendPosition === 'string'
-    ? (obj.legendPosition as 'right' | 'left' | 'bottom' | 'none')
-    : undefined;
+  const legendPosition =
+    obj.legendPosition && typeof obj.legendPosition === 'string'
+      ? (obj.legendPosition as 'right' | 'left' | 'bottom' | 'none')
+      : undefined;
 
   // Parse legendColumns (optional)
-  const legendColumns = obj.legendColumns && typeof obj.legendColumns === 'number'
-    ? obj.legendColumns
-    : undefined;
+  const legendColumns =
+    obj.legendColumns && typeof obj.legendColumns === 'number' ? obj.legendColumns : undefined;
 
   // Parse showFooter (optional)
-  const showFooter = obj.showFooter !== undefined && typeof obj.showFooter === 'boolean'
-    ? obj.showFooter
-    : undefined;
+  const showFooter =
+    obj.showFooter !== undefined && typeof obj.showFooter === 'boolean'
+      ? obj.showFooter
+      : undefined;
 
   // Set final layoutUnit (default to byte if not inferred)
   const finalLayoutUnit = layoutUnit || 'byte';

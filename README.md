@@ -19,12 +19,15 @@ Perfect for reverse engineering, protocol analysis, file format documentation, a
 ## 📸 Screenshots
 
 ### WAV File Header
+
 ![WAV Header Screenshot](./screenshots/wav_header.png)
 
 ### TCP Header with Bitfields
+
 ![TCP Header Screenshot](./screenshots/tcp_header.png)
 
 ### Unix File Permissions with Bitfields
+
 ![Unix Permissions Screenshot](./screenshots/unix_file_permission.png)
 
 ## 🚀 Installation
@@ -74,55 +77,60 @@ fields:
 ### Configuration Options
 
 ```yaml
-name: Structure Name        # Required: Name of the structure
-size: 16                    # Required: Total size in bytes
-layout: 16                  # Optional: Bytes per row (default: 16)
-layoutUnit: byte            # Optional: 'byte' or 'bit' (default: byte)
+name: Structure Name # Required: Name of the structure
+size: 16 # Required: Total size in bytes
+layout: 16 # Optional: Bytes per row (default: 16)
+layoutUnit: byte # Optional: 'byte' or 'bit' (default: byte)
 
 # Color Options
-autoColor: true             # Optional: Auto-assign colors (default: true)
-colorScheme: default        # Optional: 'default', 'dark', or 'light'
+autoColor: true # Optional: Auto-assign colors (default: true)
+colorScheme: default # Optional: 'default', 'dark', or 'light'
 
 # Legend Options
-legendPosition: right       # Optional: 'right', 'left', 'bottom', 'none'
-legendColumns: 1            # Optional: Number of columns in legend (default: 1)
+legendPosition: right # Optional: 'right', 'left', 'bottom', 'none'
+legendColumns: 1 # Optional: Number of columns in legend (default: 1)
 
 # Other Options
-showFooter: true            # Optional: Show footer (default: true)
+showFooter: true # Optional: Show footer (default: true)
 
 fields:
-  - offset: 0-3             # Required: Byte range (SSOT)
-    name: FieldName         # Required: Field name
-    type: uint32_t          # Required: Data type
-    color: blue             # Optional: Explicit color
-    description: "..."      # Optional: Description
-    endianness: little      # Optional: 'little' or 'big'
-    bitfields:              # Optional: Bit-level fields
+  - offset: 0-3 # Required: Byte range (SSOT)
+    name: FieldName # Required: Field name
+    type: uint32_t # Required: Data type
+    color: blue # Optional: Explicit color
+    description: '...' # Optional: Description
+    endianness: little # Optional: 'little' or 'big'
+    bitfields: # Optional: Bit-level fields
       - name: Flag1
-        bits: "0-3"
-        description: "..."
+        bits: '0-3'
+        description: '...'
 ```
 
 ### Supported Data Types
 
 **Integer Types:**
+
 - `char`, `int8_t`, `uint8_t`
 - `int16_t`, `uint16_t`, `short`
 - `int32_t`, `uint32_t`, `int`
 - `int64_t`, `uint64_t`, `long`
 
 **Floating Point:**
+
 - `float`, `double`
 
 **Arrays:**
+
 - `char[4]`, `uint8_t[16]`, etc.
 
 **Special:**
+
 - `reserved`, `padding` (always gray)
 
 ### Color Palette
 
 When `autoColor: true` (default), fields cycle through these colors:
+
 - 🔵 blue
 - 🔷 cyan
 - 🟡 yellow
@@ -135,6 +143,7 @@ When `autoColor: true` (default), fields cycle through these colors:
 ## 📚 Examples
 
 Check the [examples](./examples) folder for more:
+
 - WAV audio file headers
 - TCP/IP headers with bitfields
 - ELF binary formats
@@ -195,6 +204,7 @@ MIT License - see [LICENSE](./LICENSE) for details
 ## 🙏 Acknowledgments
 
 Built with:
+
 - [Obsidian API](https://github.com/obsidianmd/obsidian-api)
 - [js-yaml](https://github.com/nodeca/js-yaml)
 - TypeScript & esbuild
