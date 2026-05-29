@@ -33,17 +33,17 @@ const SUPPORTED_TYPES: Set<string> = new Set([
  * Type size in bits for bitfield validation
  */
 const TYPE_BITS: Record<string, number> = {
-  'int8_t': 8,
-  'uint8_t': 8,
-  'int16_t': 16,
-  'uint16_t': 16,
-  'short': 16,
-  'int32_t': 32,
-  'uint32_t': 32,
-  'int': 32,
-  'int64_t': 64,
-  'uint64_t': 64,
-  'long': 64,
+  int8_t: 8,
+  uint8_t: 8,
+  int16_t: 16,
+  uint16_t: 16,
+  short: 16,
+  int32_t: 32,
+  uint32_t: 32,
+  int: 32,
+  int64_t: 64,
+  uint64_t: 64,
+  long: 64,
 };
 
 /**
@@ -258,10 +258,7 @@ export function validate(config: ByteGridConfig): void {
 
           // Check bit range
           if (bits.start < 0 || bits.end < 0) {
-            throw new ValidationError(
-              `Bitfield "${bf.name}" has negative bit number`,
-              i
-            );
+            throw new ValidationError(`Bitfield "${bf.name}" has negative bit number`, i);
           }
 
           if (bits.end >= typeBits) {
@@ -296,8 +293,10 @@ export function validate(config: ByteGridConfig): void {
 
       // Check if ranges overlap (in bits)
       const overlap =
-        (field1.offsetInBits.start <= field2.offsetInBits.end && field1.offsetInBits.end >= field2.offsetInBits.start) ||
-        (field2.offsetInBits.start <= field1.offsetInBits.end && field2.offsetInBits.end >= field1.offsetInBits.start);
+        (field1.offsetInBits.start <= field2.offsetInBits.end &&
+          field1.offsetInBits.end >= field2.offsetInBits.start) ||
+        (field2.offsetInBits.start <= field1.offsetInBits.end &&
+          field2.offsetInBits.end >= field1.offsetInBits.start);
 
       if (overlap) {
         const field1Desc = `${config.fields[field1.index].offset}`;

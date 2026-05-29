@@ -3,7 +3,15 @@
  * Renders LayoutBlocks to SVG string
  */
 
-import { ByteGridConfig, LayoutBlock, RenderOptions, ColorName, LegendPosition, ColorScheme, CustomTheme } from './types';
+import {
+  ByteGridConfig,
+  LayoutBlock,
+  RenderOptions,
+  ColorName,
+  LegendPosition,
+  ColorScheme,
+  CustomTheme,
+} from './types';
 
 /**
  * Color palette mapping (default scheme)
@@ -77,7 +85,7 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
   if (s === 0) {
     r = g = b = l;
   } else {
-    const hue2rgb = (p: number, q: number, t: number) => {
+    const hue2rgb = (p: number, q: number, t: number): number => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
       if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -105,10 +113,15 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
  * Convert RGB to hex
  */
 function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map(x => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+  return (
+    '#' +
+    [r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      })
+      .join('')
+  );
 }
 
 /**
@@ -164,7 +177,7 @@ const DEFAULT_OPTIONS: Required<RenderOptions> = {
     border: '#333',
     gridLine: '#ccc',
     gridLineSubtle: '#ddd',
-  }
+  },
 };
 
 /**
@@ -213,27 +226,30 @@ export function renderSVG(
 
   // Determine showFooter
   // Priority: options.showFooter > config.showFooter > default (true)
-  const effectiveShowFooter = options?.showFooter !== undefined
-    ? options.showFooter
-    : config.showFooter !== undefined
-    ? config.showFooter
-    : opts.showFooter;
+  const effectiveShowFooter =
+    options?.showFooter !== undefined
+      ? options.showFooter
+      : config.showFooter !== undefined
+        ? config.showFooter
+        : opts.showFooter;
 
   // Determine legendColumns
   // Priority: options.legendColumns > config.legendColumns > default (1)
-  const effectiveLegendColumns = options?.legendColumns !== undefined
-    ? Math.max(1, Math.floor(options.legendColumns))
-    : config.legendColumns !== undefined
-    ? Math.max(1, Math.floor(config.legendColumns))
-    : opts.legendColumns;
+  const effectiveLegendColumns =
+    options?.legendColumns !== undefined
+      ? Math.max(1, Math.floor(options.legendColumns))
+      : config.legendColumns !== undefined
+        ? Math.max(1, Math.floor(config.legendColumns))
+        : opts.legendColumns;
 
   // Determine colorScheme
   // Priority: options.colorScheme > config.colorScheme > default ('default')
-  const effectiveColorScheme = options?.colorScheme !== undefined
-    ? options.colorScheme
-    : config.colorScheme !== undefined
-    ? config.colorScheme
-    : opts.colorScheme;
+  const effectiveColorScheme =
+    options?.colorScheme !== undefined
+      ? options.colorScheme
+      : config.colorScheme !== undefined
+        ? config.colorScheme
+        : opts.colorScheme;
 
   // Detect rows with bitfields
   const rowsWithBitfields = new Set<number>();
@@ -252,9 +268,10 @@ export function renderSVG(
   const rows = Math.ceil(config.size / layout);
   const gridWidth = layout * opts.cellWidth;
   const legendColumnWidth = 200; // Width of each legend column
-  const legendWidth = effectiveLegendPosition !== 'none' && effectiveLegendPosition !== 'bottom'
-    ? legendColumnWidth * effectiveLegendColumns
-    : 0;
+  const legendWidth =
+    effectiveLegendPosition !== 'none' && effectiveLegendPosition !== 'bottom'
+      ? legendColumnWidth * effectiveLegendColumns
+      : 0;
   const margin = 20;
 
   // Count unique fields for legend height calculation
@@ -373,9 +390,8 @@ export function renderSVG(
       const x = gridStartX + col * opts.cellWidth + opts.cellWidth / 2;
       const y = gridStartY - 10;
       // For bit layout, show index 0-7 pattern, for byte layout show hex position
-      const headerLabel = layoutUnit === 'bit'
-        ? col % 8
-        : '0x' + col.toString(16).toUpperCase().padStart(2, '0');
+      const headerLabel =
+        layoutUnit === 'bit' ? col % 8 : '0x' + col.toString(16).toUpperCase().padStart(2, '0');
       svg += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" fill="${theme.textMuted}">${headerLabel}</text>`;
     }
   }
@@ -385,8 +401,12 @@ export function renderSVG(
     for (let row = 0; row < rows; row++) {
       const y = rowYPositions.get(row) || gridStartY;
       const cellHeight = rowsWithBitfields.has(row)
-        ? (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : bitfieldCellHeight)
-        : (opts.uniformRowHeight && hasBitfields ? bitfieldCellHeight : normalCellHeight);
+        ? opts.uniformRowHeight && hasBitfields
+          ? bitfieldCellHeight
+          : bitfieldCellHeight
+        : opts.uniformRowHeight && hasBitfields
+          ? bitfieldCellHeight
+          : normalCellHeight;
       const startOffset = row * layout;
       const hexOffset = '0x' + startOffset.toString(16).toUpperCase().padStart(2, '0');
       const textY = y + cellHeight / 2 + 4;
@@ -412,7 +432,7 @@ export function renderSVG(
         const byteNum = block.offsetStart + i;
         const hexNum = '0x' + byteNum.toString(16).toUpperCase().padStart(2, '0');
         const cellX = x + i * opts.cellWidth + opts.cellWidth / 2;
-        const cellY = y + (cellHeight / 3); // Upper third for byte number
+        const cellY = y + cellHeight / 3; // Upper third for byte number
         const textFill = theme.cellText || theme.textNormal;
         svg += `<text x="${cellX}" y="${cellY}" text-anchor="middle" font-size="${opts.fontSize}" fill="${textFill}">${hexNum}</text>`;
       }
@@ -433,7 +453,7 @@ export function renderSVG(
         // Draw bit numbers (0-7)
         for (let bit = 0; bit < 8; bit++) {
           const bitX = cellX + bit * bitCellWidth + bitCellWidth / 2;
-          const bitY = y + (cellHeight * 2 / 3) + 5; // Lower third for bit numbers
+          const bitY = y + (cellHeight * 2) / 3 + 5; // Lower third for bit numbers
           const bitTextFill = theme.cellTextMuted || theme.textMuted;
           svg += `<text x="${bitX}" y="${bitY}" text-anchor="middle" font-size="7" fill="${bitTextFill}">${7 - bit}</text>`;
         }
@@ -543,12 +563,14 @@ export function renderSVG(
       const unit = layoutUnit === 'bit' ? 'bits' : 'bytes';
       const size = block.offsetEnd - block.offsetStart + 1;
       // Use hex for byte offsets, decimal for bit offsets
-      const offsetStartStr = layoutUnit === 'bit'
-        ? block.offsetStart.toString()
-        : '0x' + block.offsetStart.toString(16).toUpperCase().padStart(2, '0');
-      const offsetEndStr = layoutUnit === 'bit'
-        ? block.offsetEnd.toString()
-        : '0x' + block.offsetEnd.toString(16).toUpperCase().padStart(2, '0');
+      const offsetStartStr =
+        layoutUnit === 'bit'
+          ? block.offsetStart.toString()
+          : '0x' + block.offsetStart.toString(16).toUpperCase().padStart(2, '0');
+      const offsetEndStr =
+        layoutUnit === 'bit'
+          ? block.offsetEnd.toString()
+          : '0x' + block.offsetEnd.toString(16).toUpperCase().padStart(2, '0');
       svg += `<text x="${x + 30}" y="${y + 36}" font-size="9" fill="${theme.textFaint}">offset: ${offsetStartStr}-${offsetEndStr} (${size} ${unit})</text>`;
 
       // Bitfields (if any)

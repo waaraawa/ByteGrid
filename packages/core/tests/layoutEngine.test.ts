@@ -45,9 +45,7 @@ describe('LayoutEngine', () => {
         name: 'Test',
         size: 32,
         layout: 8,
-        fields: [
-          { offset: '0-15', name: 'LargeField', type: 'uint8_t[16]', color: 'green' },
-        ],
+        fields: [{ offset: '0-15', name: 'LargeField', type: 'uint8_t[16]', color: 'green' }],
       };
 
       const blocks = createLayout(config);
@@ -114,9 +112,7 @@ describe('LayoutEngine', () => {
         name: 'Test',
         size: 8,
         autoColor: false,
-        fields: [
-          { offset: '0-3', name: 'Field1', type: 'uint32_t' },
-        ],
+        fields: [{ offset: '0-3', name: 'Field1', type: 'uint32_t' }],
       };
 
       const blocks = createLayout(config);
@@ -287,9 +283,7 @@ describe('LayoutEngine', () => {
         size: 16, // 16 bits
         layoutUnit: 'bit',
         layout: 16,
-        fields: [
-          { offset: '0B', name: 'ByteField', type: 'uint8_t', color: 'blue' },
-        ],
+        fields: [{ offset: '0B', name: 'ByteField', type: 'uint8_t', color: 'blue' }],
       };
 
       const blocks = createLayout(config);
@@ -309,9 +303,7 @@ describe('LayoutEngine', () => {
         size: 32, // 32 bits
         layoutUnit: 'bit',
         layout: 16, // 16 bits per row
-        fields: [
-          { offset: '0-23b', name: 'LargeBitField', type: 'bits', color: 'green' },
-        ],
+        fields: [{ offset: '0-23b', name: 'LargeBitField', type: 'bits', color: 'green' }],
       };
 
       const blocks = createLayout(config);

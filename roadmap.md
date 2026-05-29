@@ -10,6 +10,7 @@
 **Goal:** Basic structure visualization with manual field definition
 
 ### Completed Features
+
 - [x] Project structure setup (monorepo with core + plugin)
 - [x] Basic type definitions (ByteGridConfig, Field, LayoutBlock)
 - [x] YAML parser with js-yaml
@@ -28,6 +29,7 @@
 **Goal:** Robust visualization with advanced layout options
 
 ### Completed Features ✅
+
 - [x] Multi-row layout support
 - [x] Grid lines rendering
 - [x] Color system (9 predefined colors)
@@ -42,10 +44,12 @@
 - [x] Comprehensive test coverage (141 tests)
 
 ### In Progress 🔄
+
 - [ ] Row/column labels customization
 - [ ] Cell padding/spacing options
 
 ### Planned Features 📋
+
 - [ ] Hex dump display (`showHexDump: true`)
 - [ ] Bit order selection (`bitOrder: 'msb'/'lsb'`)
   - MSB first: 7-6-5-4-3-2-1-0 (default, current behavior)
@@ -63,6 +67,7 @@
 **Goal:** Rich user interaction and real-time visualization
 
 ### Features
+
 - [ ] Interactive tooltips on hover
   - Field name, type, offset
   - Description and value
@@ -92,6 +97,7 @@
 **Goal:** Binary file integration and advanced analysis
 
 ### Binary File Support
+
 - [ ] Binary file parser (`binaryParser.ts`)
   - Read binary files
   - Auto-populate field values
@@ -105,6 +111,7 @@
   - Custom template system
 
 ### Structure Analysis
+
 - [ ] Structure comparison (`comparison.ts`)
   - Side-by-side view
   - Overlay view
@@ -127,6 +134,7 @@
 **Goal:** Handle large structures and optimize rendering
 
 ### Performance Optimization
+
 - [ ] Rendering cache (`cache.ts`)
   - Hash-based cache keys
   - TTL-based expiration
@@ -141,6 +149,7 @@
   - Jump to offset
 
 ### Large Structure Support
+
 - [ ] Performance benchmarks
   - 1KB: < 100ms
   - 10KB: < 500ms
@@ -159,6 +168,7 @@
 **Goal:** Plugin system and customization
 
 ### Custom Extensions
+
 - [ ] Type system extensions
   - Custom type definitions
   - Type aliases
@@ -178,6 +188,7 @@
   - Extend layout engine
 
 ### Developer Tools
+
 - [ ] Debug mode
   - Show internal state
   - Performance metrics
@@ -194,6 +205,7 @@
 ## Current Sprint (October 2024)
 
 ### Completed This Sprint ✅
+
 - [x] Bit-unit layout implementation
 - [x] Legend position options (right, left, bottom, none)
 - [x] Footer visibility control
@@ -202,6 +214,7 @@
 - [x] Documentation updates
 
 ### Next Sprint Goals (November 2024)
+
 1. **Color Schemes** (Priority: High)
    - Implement dark and light color schemes
    - Add `colorScheme` option to config
@@ -224,6 +237,7 @@
 ## Known Limitations & Future Improvements
 
 ### Current Limitations
+
 1. **YAML Line Numbers**
    - Error messages show field index, not line number
    - **Improvement:** Custom YAML parser with position tracking
@@ -250,6 +264,7 @@
 ## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines on:
+
 - Proposing new features
 - Submitting pull requests
 - Testing requirements
@@ -266,6 +281,7 @@ Following **Semantic Versioning** (MAJOR.MINOR.PATCH):
 - **PATCH:** Bug fixes, performance improvements
 
 ### Planned Releases
+
 - **v0.2.0** - Phase 2 completion (Color schemes, hex dump)
 - **v0.3.0** - Phase 3 start (Interactive features)
 - **v1.0.0** - Production ready (All core features stable)
@@ -276,12 +292,14 @@ Following **Semantic Versioning** (MAJOR.MINOR.PATCH):
 ## Feedback & Priorities
 
 Feature priorities may change based on:
+
 - User feedback and requests
 - Community contributions
 - Technical dependencies
 - Performance considerations
 
 To suggest features or vote on priorities:
+
 - Open an issue on GitHub
 - Join discussions in the community
 - Contribute code or documentation

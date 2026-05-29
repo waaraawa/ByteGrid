@@ -17,7 +17,10 @@ export class ByteGridError extends Error {
  * Error thrown during YAML parsing
  */
 export class ParseError extends ByteGridError {
-  constructor(message: string, public readonly fieldIndex?: number) {
+  constructor(
+    message: string,
+    public readonly fieldIndex?: number
+  ) {
     super(message);
     this.name = 'ParseError';
     Object.setPrototypeOf(this, ParseError.prototype);
@@ -28,7 +31,10 @@ export class ParseError extends ByteGridError {
  * Error thrown during validation
  */
 export class ValidationError extends ByteGridError {
-  constructor(message: string, public readonly fieldIndex?: number) {
+  constructor(
+    message: string,
+    public readonly fieldIndex?: number
+  ) {
     super(message);
     this.name = 'ValidationError';
     Object.setPrototypeOf(this, ValidationError.prototype);
@@ -50,7 +56,10 @@ export class RenderError extends ByteGridError {
  * Error thrown during binary parsing
  */
 export class BinaryParseError extends ByteGridError {
-  constructor(message: string, public readonly offset?: number) {
+  constructor(
+    message: string,
+    public readonly offset?: number
+  ) {
     super(message);
     this.name = 'BinaryParseError';
     Object.setPrototypeOf(this, BinaryParseError.prototype);
