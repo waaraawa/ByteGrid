@@ -2,6 +2,7 @@ import esbuild from 'esbuild';
 import process from 'process';
 import builtins from 'builtin-modules';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 const banner = `/*
@@ -11,7 +12,20 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = process.argv[2] === 'production';
-const watch = process.argv[2] === '--watch';
+const watch = process.argv.includes('--watch');
+const deploy = process.argv.includes('--deploy');
+
+function expandHomePath(value) {
+  if (value === '~') {
+    return os.homedir();
+  }
+
+  if (value.startsWith('~/')) {
+    return path.join(os.homedir(), value.slice(2));
+  }
+
+  return value;
+}
 
 // Obsidian vault plugin directory
 let OBSIDIAN_PLUGIN_DIR = process.env.OBSIDIAN_PLUGIN_DIR;
@@ -23,6 +37,10 @@ try {
   }
 } catch (e) {
   // Ignore if .env doesn't exist
+}
+
+if (OBSIDIAN_PLUGIN_DIR) {
+  OBSIDIAN_PLUGIN_DIR = expandHomePath(OBSIDIAN_PLUGIN_DIR);
 }
 
 // Plugin to copy files to Obsidian after build
@@ -92,7 +110,7 @@ const context = await esbuild.context({
   treeShaking: true,
   outfile: 'main.js',
   minify: prod,
-  plugins: [copyPlugin],
+  plugins: deploy ? [copyPlugin] : [],
 });
 
 if (watch) {

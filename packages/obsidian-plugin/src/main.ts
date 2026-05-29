@@ -3,10 +3,10 @@ import { parse, validate, createLayout, renderSVG } from '@bytegrid/core';
 
 export default class ByteGridPlugin extends Plugin {
   onload(): void {
-    this.registerMarkdownCodeBlockProcessor('bytegrid', (source, el, ctx) => {
+    this.registerMarkdownCodeBlockProcessor('bytegrid', (source, el, _ctx) => {
       try {
         // Parse YAML input
-        const parsed = parseYaml(source);
+        const parsed = parseYaml(source) as unknown;
         const config = parse(parsed);
 
         // Validate configuration
@@ -25,7 +25,7 @@ export default class ByteGridPlugin extends Plugin {
             border: 'var(--background-modifier-border)',
             gridLine: 'var(--background-modifier-border)',
             gridLineSubtle: 'var(--background-modifier-border-hover)',
-            // For block cell text, using var(--text-normal) might lack contrast against colored blocks. 
+            // For block cell text, using var(--text-normal) might lack contrast against colored blocks.
             // We use a high-contrast fallback variable or default to white/black via CSS if available.
             // Obsidian's callouts use --callout-title-color which might be good, but for now we rely on standard text-muted.
             // Let's omit cellText overrides to fallback to textNormal/textMuted,
@@ -39,13 +39,13 @@ export default class ByteGridPlugin extends Plugin {
               mint: 'var(--color-green)', // No mint in standard Obsidian, fallback to green
               pink: 'var(--color-pink)',
               gray: 'var(--color-base-40)',
-            }
-          }
+            },
+          },
         });
 
         // Display SVG safely using DOMParser
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+        const domParser = new DOMParser();
+        const svgDoc = domParser.parseFromString(svg, 'image/svg+xml');
         const svgElement = svgDoc.documentElement;
 
         if (svgElement.tagName === 'svg') {
@@ -55,10 +55,20 @@ export default class ByteGridPlugin extends Plugin {
         }
       } catch (error) {
         // Display error
-        const container = el.createDiv({ cls: 'bytegrid-error' });
-        container.createEl('h4', { text: 'Bytegrid error' });
-        container.createEl('p', { text: error instanceof Error ? error.message : String(error) });
-        container.createEl('pre', { text: source });
+        const container = document.createElement('div');
+        container.className = 'bytegrid-error';
+
+        const title = document.createElement('h4');
+        title.textContent = 'Bytegrid error';
+
+        const message = document.createElement('p');
+        message.textContent = error instanceof Error ? error.message : String(error);
+
+        const input = document.createElement('pre');
+        input.textContent = source;
+
+        container.append(title, message, input);
+        el.appendChild(container);
       }
     });
   }
