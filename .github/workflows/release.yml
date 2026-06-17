@@ -30,6 +30,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run Scorecard preflight
+        run: npm run check:scorecard
+
       - name: Build
         run: npm run build
 
