@@ -1,6 +1,6 @@
 {
   "name": "bytegrid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Binary data and C struct memory layout visualization for Obsidian",
   "private": true,
   "workspaces": [
