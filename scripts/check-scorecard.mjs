@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const IGNORED_DIRS = new Set(['coverage', 'dist', 'node_modules']);
@@ -56,6 +57,15 @@ addCheck('Committed npm lockfile exists', () => {
 
   if (!fs.existsSync(lockfile)) {
     throw new Error('package-lock.json is required for reproducible dependency resolution');
+  }
+
+  try {
+    execFileSync('git', ['ls-files', '--error-unmatch', 'package-lock.json'], {
+      cwd: ROOT,
+      stdio: 'ignore',
+    });
+  } catch {
+    throw new Error('package-lock.json must be tracked by Git');
   }
 });
 
